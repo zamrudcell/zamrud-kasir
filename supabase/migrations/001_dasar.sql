@@ -476,6 +476,15 @@ begin
   values (p_produk, p_jenis, p_qty, baru, p_ref, p_staf);
 end $$;
 
+-- barcode EAN-13 buatan toko (awalan 20 = kode internal toko)
+create or replace function _ean13(p12 text) returns text
+language plpgsql immutable as $$
+declare s int := 0; i int;
+begin
+  for i in 1..12 loop s := s + substr(p12, i, 1)::int * case when i % 2 = 0 then 3 else 1 end; end loop;
+  return p12 || ((10 - s % 10) % 10)::text;
+end $$;
+
 create or replace function _pelanggan(p_nama text, p_hp text) returns uuid
 language plpgsql security definer set search_path = public as $$
 declare pid uuid; v_hp text := nullif(regexp_replace(coalesce(p_hp,''), '[^0-9+]', '', 'g'), '');
@@ -686,7 +695,7 @@ begin
     if kd is null then kd := 'BRG-' || lpad((select count(*) + 1 from produk)::text, 4, '0'); end if;
     if bc is null then
       loop
-        bc := '20' || lpad((floor(random() * 1e10))::bigint::text, 10, '0');
+        bc := _ean13('20' || lpad((floor(random() * 1e10))::bigint::text, 10, '0'));
         exit when not exists (select 1 from produk where barcode = bc);
       end loop;
     end if;
