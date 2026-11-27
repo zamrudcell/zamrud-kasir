@@ -3,7 +3,7 @@ import { api } from './api.js';
 import { sesi, aksi, aturSaatSesiHabis, aturSaatTerkunci, mulaiPemantauKunci, setTerkunci } from './sesi.js';
 import { esc, ikon, $, $$, toast, salah, sibuk, lembar, PERAN, konfirmasi } from './ui.js';
 import { VERSI } from './config.js';
-import { terapkanTema, saklarLogo, mulaiMusik, hentikanMusik } from './efek.js';
+import { terapkanTema, saklarLogo, mulaiMusik, hentikanMusik, menuDorong, sfx } from './efek.js';
 
 terapkanTema();
 
@@ -137,17 +137,27 @@ function papanPin({ judul, sub, kodeTetap = '', saatKirim, tombolBawah = '' }) {
       <div class="tombol-pin">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 'C', 0, '⌫'].map(n => `<button data-n="${n}">${n}</button>`).join('')}</div>
       ${tombolBawah}
     </div>`;
-  let pin = '';
+  let pin = '', timerIntip = [];
   const titik = $$('.titik-pin i', wadah), pesan = $('.pesan-pin', wadah), kode = $('.kode-staf', wadah);
-  const gambar = () => titik.forEach((t, i) => t.classList.toggle('isi', i < pin.length));
-  const goyang = (m) => { pesan.textContent = m; wadah.querySelector('.kartu-pin').classList.remove('goyang'); void wadah.offsetWidth; wadah.querySelector('.kartu-pin').classList.add('goyang'); pin = ''; gambar(); };
+  const gambar = () => titik.forEach((t, i) => { if (!t.classList.contains('intip')) t.classList.toggle('isi', i < pin.length); });
+  const bersihIntip = () => { timerIntip.forEach(clearTimeout); timerIntip = []; titik.forEach(t => { t.classList.remove('intip'); t.textContent = ''; }); };
+  const intip = (i, angka) => {
+    const t = titik[i]; t.classList.remove('isi'); t.classList.add('intip'); t.textContent = angka;
+    timerIntip.push(setTimeout(() => { t.classList.remove('intip'); t.textContent = ''; t.classList.toggle('isi', i < pin.length); if (i < pin.length) sfx('pop'); }, 650));
+  };
+  const goyang = (m) => { pesan.textContent = m; wadah.querySelector('.kartu-pin').classList.remove('goyang'); void wadah.offsetWidth; wadah.querySelector('.kartu-pin').classList.add('goyang'); pin = ''; bersihIntip(); gambar(); };
   const tekan = async (n) => {
     mulaiMusik();
-    if (n === 'C') pin = ''; else if (n === '⌫') pin = pin.slice(0, -1); else if (pin.length < 6) pin += n;
+    if (wadah.classList.contains('memproses')) return;
+    sfx('click');
+    if (n === 'C') { pin = ''; bersihIntip(); }
+    else if (n === '⌫') { pin = pin.slice(0, -1); const t = titik[pin.length]; if (t) { t.classList.remove('intip'); t.textContent = ''; } }
+    else if (pin.length < 6) { pin += n; intip(pin.length - 1, n); }
     gambar(); pesan.textContent = '';
     if (pin.length === 6) {
       if (!kode.value.trim()) { goyang('Isi kode karyawan dulu'); kode.focus(); return; }
       wadah.classList.add('memproses');
+      await new Promise(r => setTimeout(r, 350)); // angka terakhir sempat terlihat
       try { await saatKirim(kode.value.trim().toUpperCase(), pin); }
       catch (e) { goyang(e.message); }
       finally { wadah.classList.remove('memproses'); }
@@ -247,7 +257,27 @@ function kerangka() {
     await sesi.keluar(); layarPin('Shift diakhiri. Sampai jumpa!');
   };
   $('.lonceng').onclick = bukaNotifikasi;
-  $$('.tab').forEach(t => t.addEventListener('click', () => { if (t.getAttribute('href') !== location.hash) t.classList.add('memuat'); }));
+  $$('.tab').forEach(t => t.addEventListener('click', (e) => {
+    if (t.dataset.id === 'menu') { e.preventDefault(); bukaMenuDorong(); return; }
+    if (t.getAttribute('href') !== location.hash) t.classList.add('memuat');
+  }));
+}
+
+function bukaMenuDorong() {
+  const s = sesi.staf, grup = {};
+  for (const [id, h] of Object.entries(HALAMAN)) if (!h.tersembunyi && bolehBuka(id)) (grup[h.grup] ||= []).push(id);
+  const kini = (location.hash.replace(/^#\/?/, '').split('?')[0]) || 'beranda';
+  const tabMenu = $('.tab[data-id="menu"]');
+  tabMenu?.classList.add('aktif');
+  menuDorong({
+    isiHTML: `<div class="zd-profil"><div class="avatar" style="--w:${esc(s.warna || '#10b981')}">${esc((s.nama || '?')[0])}</div><div><b>${esc(s.nama)}</b><small>${esc(PERAN[s.peran])} · ${esc(s.kode)}</small></div></div>
+      <div class="zd-daftar">${Object.entries(grup).map(([g, ids]) => `<div class="zd-grup">${g}</div>${ids.map(id => `<a href="#/${id}" class="zd-item ${id === kini ? 'on' : ''}">${ikon(HALAMAN[id].ik, 18)}<span>${esc(HALAMAN[id].pendek || HALAMAN[id].judul)}</span></a>`).join('')}`).join('')}</div>
+      <div class="zd-bawah"><button class="btn kecil gelap" data-zd="kunci">${ikon('lock', 16)} Kunci</button><button class="btn kecil merah-garis" data-zd="keluar">${ikon('logout', 16)} Akhiri shift</button></div>`,
+    saatTutup: () => { if (kini !== 'menu') tabMenu?.classList.remove('aktif'); },
+  });
+  const m = $('.zk-menu-dorong');
+  $('[data-zd="kunci"]', m).onclick = () => setTimeout(kunciLayar, 300);
+  $('[data-zd="keluar"]', m).onclick = () => setTimeout(() => $('[data-keluar]')?.click(), 300);
 }
 
 // ---------- notifikasi: stok menipis, retur menunggu, servis siap ----------
@@ -319,6 +349,7 @@ async function bukaAplikasi() {
   setTimeout(() => hentikanMusik(3000), 8000);
   await tampilkan();
   muatNotifikasi();
+  setTimeout(() => Object.values(HALAMAN).forEach(h => h.muat().catch(() => {})), 1500); // siapkan semua halaman agar cepat dibuka
   clearInterval(window.__notif); window.__notif = setInterval(muatNotifikasi, 60000);
 }
 

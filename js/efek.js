@@ -31,6 +31,10 @@ function desis({ d = .3, f = 1200, f2 = f, q = 1, v = .2 }) {
   s.connect(flt).connect(g).connect(c.destination); s.start(t);
 }
 const NADA_UI = {
+  focus: () => { nada({ f: 1500, d: .03, type: 'square', v: .05 }); setTimeout(() => nada({ f: 2000, d: .03, type: 'square', v: .05 }), 70); },
+  pop: () => nada({ f: 320, f2: 760, d: .09, v: .16 }),
+  click: () => { nada({ f: 2400, f2: 1200, d: .025, type: 'square', v: .06 }); nada({ f: 160, f2: 90, d: .05, v: .15 }); },
+  whoosh: () => desis({ d: .45, f: 300, f2: 2600, q: .8, v: .16 }),
   tick: () => nada({ f: 1800, f2: 900, d: .04, type: 'triangle', v: .15 }),
   boing: () => nada({ f: 130, f2: 430, d: .24, v: .22 }),
   drop: () => nada({ f: 980, f2: 320, d: .18, v: .18 }),
@@ -79,55 +83,79 @@ document.addEventListener('animationend', (e) => {
   if (e.animationName === 'zk-jeli' || e.animationName === 'zk-jeli-halus') e.target.classList.remove('zk-jeli', 'zk-jeli-halus');
 });
 
-// ---------------- 2. Transisi cairan saat membuka kotak/halaman ----------------
-let lapisCair = null, sibukCair = false;
-function siapkanCair() {
-  if (lapisCair) return lapisCair;
-  const ns = 'http://www.w3.org/2000/svg';
-  lapisCair = document.createElementNS(ns, 'svg');
-  lapisCair.setAttribute('class', 'zk-cair'); lapisCair.setAttribute('viewBox', '0 0 100 100');
-  lapisCair.setAttribute('preserveAspectRatio', 'none'); lapisCair.setAttribute('aria-hidden', 'true');
-  lapisCair.innerHTML = `<defs><linearGradient id="zk-cair-g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0e7a55"/><stop offset=".55" stop-color="#063826"/><stop offset="1" stop-color="#c9a24a"/></linearGradient></defs>
-    <path fill="url(#zk-cair-g)" d="M0,100 L100,100 Z"/>`;
-  document.body.appendChild(lapisCair);
-  return lapisCair;
-}
-const halus = t => t * t * (3 - 2 * t);
-function animasi(durasi, gambar) {
-  return new Promise(ok => {
-    const awal = performance.now();
-    (function f(now) { const p = Math.min(1, (now - awal) / durasi); gambar(halus(p)); p < 1 ? requestAnimationFrame(f) : ok(); })(awal);
-  });
-}
-export async function transisiCair(saatTertutup) {
-  if (!geraknya() || sibukCair) { saatTertutup(); return; }
-  sibukCair = true;
-  const svg = siapkanCair(), path = svg.querySelector('path'), LENTUR = 60;
-  svg.style.display = 'block';
-  sfx('gloop');
-  await animasi(420, p => { const y = 100 - p * 130, b = Math.sin(p * Math.PI) * LENTUR;
-    path.setAttribute('d', `M0,100 L0,${y} Q50,${y - b} 100,${y} L100,100 Z`); });
-  try { saatTertutup(); } catch {}
-  await new Promise(r => setTimeout(r, 140));
-  sfx('drop');
-  await animasi(480, p => { const y = 100 - p * 130, b = Math.sin(p * Math.PI) * LENTUR;
-    path.setAttribute('d', `M0,0 L0,${y} Q50,${y - b} 100,${y} L100,0 Z`); });
-  path.setAttribute('d', 'M0,100 L100,100 Z'); svg.style.display = 'none';
-  sibukCair = false;
-}
-// semua tautan menu/kotak (#/halaman) memakai transisi cairan
-document.addEventListener('click', (e) => {
-  if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.button) return;
-  const a = e.target.closest('a[href^="#/"]');
-  if (!a) return;
-  const ke = a.getAttribute('href');
-  if (ke === location.hash) return;
-  e.preventDefault();
-  setTimeout(() => transisiCair(() => { location.hash = ke; }), 120); // beri waktu efek jeli terlihat
-});
+// ---------------- 2. Bokeh kamera di tab bawah ----------------
+let lepasBokeh = null;
+document.addEventListener('pointerdown', (e) => {
+  const t = e.target.closest('.tabbar .tab');
+  if (!t || !geraknya()) return;
+  const bar = t.closest('.tabbar');
+  clearTimeout(lepasBokeh);
+  bar.classList.add('zk-bokeh');
+  bar.querySelectorAll('.tab').forEach(x => x.classList.toggle('zk-tajam', x === t));
+  sfx('focus');
+}, { passive: true });
+const akhiriBokeh = () => {
+  clearTimeout(lepasBokeh);
+  lepasBokeh = setTimeout(() => document.querySelectorAll('.tabbar.zk-bokeh').forEach(b => {
+    b.classList.remove('zk-bokeh'); b.querySelectorAll('.zk-tajam').forEach(x => x.classList.remove('zk-tajam'));
+  }), 260);
+};
+document.addEventListener('pointerup', akhiriBokeh, { passive: true });
+document.addEventListener('pointercancel', akhiriBokeh, { passive: true });
 
-// ---------------- 3. Saklar titik LED → logo permata Zamrud ----------------
+// ---------------- 3. Kartu biasa (tidak bisa diklik): miring & bercahaya ----------------
+const KARTU_DIAM = '.kartu, .ringkas-angka > div, .grid-info > div, .kartu-gelap, .hero, .tabel-ringkas, .ro-kotak, .kartu-hangat';
+document.addEventListener('pointerdown', (e) => {
+  if (!geraknya()) return;
+  if (e.target.closest('a, button, input, select, textarea, label, summary, tr[data-id], .lembar, .zk-menu-dorong')) return;
+  const k = e.target.closest(KARTU_DIAM);
+  if (!k) return;
+  k.classList.remove('zk-miring'); void k.offsetWidth; k.classList.add('zk-miring');
+  sfx('pop');
+  clearTimeout(k._miring); k._miring = setTimeout(() => k.classList.remove('zk-miring'), 650);
+}, { passive: true });
+
+// ---------------- 4. Blur gerak saat digulir cepat ----------------
+let yAkhir = scrollY, laju = 0, arah = 1, v = 0, putar = false, bunyiGulir = 0;
+function bingkaiGulir() {
+  const el = document.getElementById('halaman');
+  v += (Math.min(laju, 60) * 0.05 - v) * .25;
+  laju *= .75;
+  if (el) {
+    el.style.filter = v > .2 ? `blur(${v.toFixed(2)}px)` : '';
+    el.style.transform = v > .2 ? `skewY(${(v * arah * .5).toFixed(2)}deg)` : '';
+  }
+  if (v > .05 || laju > .5) requestAnimationFrame(bingkaiGulir);
+  else { putar = false; if (el) { el.style.filter = ''; el.style.transform = ''; } }
+}
+addEventListener('scroll', () => {
+  if (!geraknya() || document.body.classList.contains('ada-lembar') || document.body.classList.contains('zk-dorong-buka') || document.body.dataset.halaman === 'kasir') { yAkhir = scrollY; return; }
+  const selisih = scrollY - yAkhir; yAkhir = scrollY;
+  arah = Math.sign(selisih) || arah; laju = Math.abs(selisih);
+  if (laju > 40 && performance.now() - bunyiGulir > 900) { bunyiGulir = performance.now(); sfx('whoosh'); }
+  if (!putar && laju > 18) { putar = true; requestAnimationFrame(bingkaiGulir); }
+}, { passive: true });
+
+// ---------------- 5. Menu "dorong mundur" ----------------
+export function menuDorong({ isiHTML, saatTutup }) {
+  let el = document.querySelector('.zk-menu-dorong');
+  if (!el) { el = document.createElement('nav'); el.className = 'zk-menu-dorong'; document.body.appendChild(el); }
+  const buka = document.body.classList.contains('zk-dorong-buka');
+  const tutup = () => { document.body.classList.remove('zk-dorong-buka'); sfx('tick'); saatTutup?.(); };
+  if (buka) return tutup();
+  el.innerHTML = isiHTML;
+  document.body.classList.add('zk-dorong-buka');
+  sfx('pop');
+  [...el.querySelectorAll('.zd-item, .zd-profil, .zd-bawah')].forEach((b, k) => b.animate(
+    [{ transform: 'translateX(-24px)', opacity: 0 }, { transform: 'none', opacity: 1 }],
+    { duration: 380, delay: 120 + Math.min(k, 14) * 35, fill: 'backwards', easing: 'cubic-bezier(.23,1,.32,1)' }));
+  el.onclick = (e) => { if (e.target.closest('a, button')) setTimeout(tutup, 10); };
+  const utama = document.querySelector('.utama');
+  if (utama) utama.addEventListener('click', function sekali(ev) { if (document.body.classList.contains('zk-dorong-buka')) { ev.preventDefault(); ev.stopPropagation(); tutup(); } }, { capture: true, once: true });
+  return tutup;
+}
+
+// ---------------- 6. Saklar titik LED → logo permata Zamrud ----------------
 const pola = rows => rows.flatMap((r, y) => [...r].map((c, x) => c === '#' ? [x - 5, y - 5] : null).filter(Boolean));
 const GEMBOK = pola(['...........', '....###....', '...#...#...', '...#...#...', '..#######..', '..#######..', '..###.###..', '..###.###..', '..#######..', '..#######..', '...........']);
 const KILAU = pola(['.....#.....', '.....#.....', '..#..#..#..', '...#.#.#...', '....###....', '###########', '....###....', '...#.#.#...', '..#..#..#..', '.....#.....', '.....#.....']);

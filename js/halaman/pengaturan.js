@@ -34,7 +34,7 @@ export default {
         </form></section>` : ''}
       <section class="kartu muncul"><div class="kartu-kepala"><h3>${ikon('star', 18)} Tampilan & suara (perangkat ini)</h3></div>
         <div class="segmen" id="tema">${[['kaca', 'Kaca Mewah'], ['terang', 'Terang']].map(([v, t]) => `<button data-v="${v}" class="${tema() === v ? 'aktif' : ''}">${t}</button>`).join('')}</div>
-        <label class="cek" style="margin-left:14px"><input type="checkbox" id="suara" ${suaraNyala() ? 'checked' : ''}> Suara efek (boing, cairan, saklar)</label>
+        <label class="cek" style="margin-left:14px"><input type="checkbox" id="suara" ${suaraNyala() ? 'checked' : ''}> Suara efek & musik (boing, fokus, saklar, musik pembuka)</label>
       </section>
       <div class="dua-kolom">
         <section class="kartu muncul d1"><div class="kartu-kepala"><h3>${ikon('print', 18)} Ukuran nota (perangkat ini)</h3></div>
