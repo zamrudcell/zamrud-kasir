@@ -4,6 +4,15 @@ const ambil = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { r
 const simpan = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 export const tema = () => ambil('zk_tema', 'kaca');
 export const suaraNyala = () => ambil('zk_suara', '1') === '1';
+export const fontAktif = () => ambil('zk_font', 'grotesk');
+export function setFont(k) {
+  const f = window.ZK_FONT?.[k]; if (!f) return;
+  simpan('zk_font', k);
+  const l = document.getElementById('zk-font') || Object.assign(document.head.appendChild(document.createElement('link')), { id: 'zk-font', rel: 'stylesheet' });
+  l.href = 'https://fonts.googleapis.com/css2?family=' + f[2] + '&display=swap';
+  const r = document.documentElement.style;
+  r.setProperty('--font-judul', '"' + f[0] + '"'); r.setProperty('--font-kode', '"' + f[1] + '"');
+}
 export function setTema(t) { simpan('zk_tema', t); terapkanTema(); }
 export function setSuara(on) { simpan('zk_suara', on ? '1' : '0'); }
 export const musikNyala = () => ambil('zk_musik', '1') === '1';

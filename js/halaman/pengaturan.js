@@ -4,7 +4,7 @@ import { esc, ikon, tgl, $, $$, toast, salah, sibuk, konfirmasi } from '../ui.js
 import { petaStaf } from '../data.js';
 import { ukuranNota, setUkuranNota } from '../nota.js';
 import { VERSI } from '../config.js';
-import { tema, setTema, suaraNyala, setSuara } from '../efek.js';
+import { tema, setTema, suaraNyala, setSuara, fontAktif, setFont } from '../efek.js';
 
 const AKSI = {
   masuk: 'masuk shift', keluar: 'akhiri shift', pin_salah: 'PIN salah', masuk_ditolak_diluar_shift: 'mencoba masuk di luar shift',
@@ -34,6 +34,8 @@ export default {
         </form></section>` : ''}
       <section class="kartu muncul"><div class="kartu-kepala"><h3>${ikon('star', 18)} Tampilan & suara (perangkat ini)</h3></div>
         <div class="segmen" id="tema">${[['kaca', 'Kaca Neon'], ['mewah', 'Emas · Perak · Hijau'], ['terang', 'Kaca Terang']].map(([v, t]) => `<button data-v="${v}" class="${tema() === v ? 'aktif' : ''}">${t}</button>`).join('')}</div>
+        <p class="lbl" style="margin-top:16px">Gaya huruf (judul + angka/kode)</p>
+        <div class="pilih-font" id="font">${Object.entries(window.ZK_FONT || {}).map(([k, f]) => `<button data-f="${k}" class="${fontAktif() === k ? 'aktif' : ''}" style="--fj:'${f[0]}';--fk:'${f[1]}'"><b>Zamrud Cell</b><code>Rp 125.000 · ZC01</code><small>${esc(f[0])} + ${esc(f[1])}</small></button>`).join('')}</div>
         <label class="cek" style="margin-left:14px"><input type="checkbox" id="suara" ${suaraNyala() ? 'checked' : ''}> Suara efek (boing, fokus, saklar). Musik diatur dari tombol 🎵 di atas.</label>
       </section>
       <div class="dua-kolom">
@@ -56,6 +58,9 @@ export default {
       try { const d = Object.fromEntries(new FormData(ft)); await aksi('simpan_pengaturan', { p_data: d }); sesi.pengaturan = await api.satu('pengaturan'); toast('Pengaturan disimpan'); } catch (er) { salah(er); }
     }); };
     $$('#tema button', el).forEach(b => b.onclick = () => { setTema(b.dataset.v); $$('#tema button', el).forEach(x => x.classList.toggle('aktif', x === b)); });
+    $$('#font button', el).forEach(b => b.onclick = () => { setFont(b.dataset.f); $$('#font button', el).forEach(x => x.classList.toggle('aktif', x === b)); });
+    // muat semua font agar contoh terlihat (hanya di halaman ini)
+    if (!document.getElementById('zk-font-semua')) { const l = document.createElement('link'); l.id = 'zk-font-semua'; l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?' + Object.values(window.ZK_FONT || {}).map(f => 'family=' + f[2]).join('&') + '&display=swap'; document.head.appendChild(l); }
     $('#suara', el).onchange = (e) => setSuara(e.target.checked);
     $$('#nota button', el).forEach(b => b.onclick = () => { setUkuranNota(b.dataset.v); $$('#nota button', el).forEach(x => x.classList.toggle('aktif', x === b)); toast('Ukuran nota: ' + b.textContent); });
     $('#fpin', el).onsubmit = (e) => { e.preventDefault(); const f = e.target;

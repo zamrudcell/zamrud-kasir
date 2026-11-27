@@ -2,6 +2,7 @@ import { api } from '../api.js';
 import { aksi } from '../sesi.js';
 import { esc, ikon, rp, tgl, $, $$, toast, salah, lembar, sibuk, kosong, hariIni, geserHari, awalHari, akhirHari, angka, konfirmasi, animasiAngka } from '../ui.js';
 import { petaStaf } from '../data.js';
+import { grafikArus } from '../grafik.js';
 
 function grafikBatang(data) {
   // data: [{label, nilai}]
@@ -60,7 +61,7 @@ export default {
           <div class="stat ${bersih >= 0 ? 'hijau' : 'merah'} muncul d2"><small>Laba bersih</small><b data-hitung="${bersih}" data-rp>0</b><em>setelah pengeluaran</em></div>
           <div class="stat merah muncul d3"><small>Piutang servis</small><b data-hitung="${n('belum_lunas')}" data-rp>0</b><em>belum lunas (periode ini)</em></div>
         </section>
-        <section class="kartu muncul d2"><div class="kartu-kepala"><h3>${ikon('chart', 18)} Penjualan harian</h3></div>${grafikBatang((r.harian || []).map(x => ({ label: String(x.tgl).slice(8, 10), nilai: Number(x.nilai) })))}</section>
+        <section class="kartu muncul d2 kartu-arus" id="arus"></section>
         <section class="kartu muncul d3"><h3>${ikon('list', 18)} Rincian laba rugi</h3>
           <div class="tabel-ringkas laporan">
             <div class="baris"><span>Penjualan barang</span><span>${rp(n('penjualan'))}</span></div>
@@ -76,6 +77,7 @@ export default {
             <div class="baris besar"><span>LABA BERSIH</span><b class="${bersih >= 0 ? 'hijau' : 'merah'}">${rp(bersih)}</b></div>
           </div></section>`;
       animasiAngka(isi);
+      grafikArus($('#arus', isi), dari, sampai, { judul: `${ikon('chart', 18)} Pemasukan, barang masuk & pengeluaran` }).catch(e => { $('#arus', isi).innerHTML = kosong(e.message, 'alert'); });
     }
 
     async function perBarang() {

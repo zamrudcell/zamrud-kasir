@@ -325,17 +325,24 @@ async function tampilkan() {
   if (!wadah) return;
   try { halamanAktif?.lepas?.(); } catch {}
   try {
-    const m = await h.muat(); // sudah disiapkan sejak login, jadi instan
+    document.body.classList.add('zk-pindah');
+    clearTimeout(window.__pindahT);
+    const adaIsi = wadah.childElementCount > 0 && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (adaIsi) { wadah.classList.remove('masuk'); wadah.classList.add('keluar'); }
+    const [m] = await Promise.all([h.muat(), adaIsi ? new Promise(r => setTimeout(r, 120)) : null]); // halaman lama mengecil & memudar
     if (giliran !== giliranTampil) return;
     window.__gulirProgram = performance.now();
     window.scrollTo(0, 0);
     const ut = $('.utama'); if (ut) ut.scrollTop = 0;
-    wadah.classList.remove('masuk');
+    wadah.classList.remove('masuk', 'keluar');
     wadah.innerHTML = '';
+    halamanAktif = m.default;
+    // bagian awal halaman (kerangka) langsung tergambar, baru animasi zoom-blur dijalankan
+    const proses = m.default.tampil(wadah, { params: new URLSearchParams(location.hash.split('?')[1] || ''), segarkanNotif: muatNotifikasi });
     void wadah.offsetWidth;
     wadah.classList.add('masuk');
-    halamanAktif = m.default;
-    await m.default.tampil(wadah, { params: new URLSearchParams(location.hash.split('?')[1] || ''), segarkanNotif: muatNotifikasi });
+    window.__pindahT = setTimeout(() => { document.body.classList.remove('zk-pindah'); }, 340);
+    await proses;
     $$('.tab.memuat').forEach(t => t.classList.remove('memuat'));
     const ta = $(`.tab[data-id="${id}"]`);
     if (ta) { ta.classList.remove('sukses'); void ta.offsetWidth; ta.classList.add('sukses'); setTimeout(() => ta.classList.remove('sukses'), 900); }

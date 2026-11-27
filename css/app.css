@@ -929,3 +929,86 @@ body.tema-cerah.zk-dorong-siap .utama { background: #eef2ee; }
 .ubin-logo { padding: 6px; overflow: hidden; }
 .ubin-logo img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .35)); }
 .avatar-owner img { padding: 2px; }
+
+/* =====================================================================
+   v1.6 — font developer, layar mendatar, zoom blur, grafik arus
+   ===================================================================== */
+:root { font-family: var(--font-judul, "Space Grotesk"), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+input, select, textarea, button { font-family: inherit; }
+h1, h2, h3, h4, .topbar h1 { letter-spacing: -.015em; }
+.mono, code, kbd, .kp-kode, .kp-harga, .kp-stok, .bs-no, .bs-harga, .lb-harga, .total-besar, .stat b, .angka, .hero-jam,
+.titik-pin, .tombol-pin button, .sukses h3, .zk-saklar-ket, .tabel td.kanan, .baris-ringkas > b, .tabel-ringkas .baris > span:last-child,
+.tabel-ringkas .baris > b, .grafik text, .arus-fig text, .pil-emas, .mini-tgl, input[inputmode="numeric"], input[type="date"] {
+  font-family: var(--font-kode, "JetBrains Mono"), ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums;
+}
+.stat b, .total-besar, .kp-harga { letter-spacing: -.03em; }
+.nota, .nota * { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace !important; }
+
+/* pilihan font */
+.pilih-font { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr)); gap: 10px; margin: 6px 0 14px; }
+.pilih-font button { display: grid; gap: 3px; text-align: left; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--garis); background: rgba(255, 255, 255, .04); transition: transform .2s var(--pegas), border-color .2s, box-shadow .2s; }
+.pilih-font button b { font-family: var(--fj), sans-serif; font-size: 1.15rem; font-weight: 700; }
+.pilih-font button code { font-family: var(--fk), monospace; font-size: .82rem; white-space: nowrap; color: var(--emas); }
+.pilih-font button small { font-family: inherit; font-size: .72rem; opacity: .7; }
+.pilih-font button.aktif { border-color: #34d399; box-shadow: 0 0 0 1px #34d399, 0 0 20px -6px #34d399; }
+.pilih-font button:active { transform: scale(.97); }
+body.tema-kaca .pilih-font button { border-color: rgba(255, 255, 255, .12); }
+body.tema-mewah .pilih-font button.aktif { border-color: #f6d27a; box-shadow: 0 0 0 1px #f6d27a, 0 0 20px -6px #f6d27a; }
+
+/* video pembuka: selalu utuh di tengah, tidak terpotong di layar lebar */
+.pembuka { display: block; overflow: hidden; background: #e7e3dc; }
+.pembuka video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+@media (max-aspect-ratio: 3/5) { .pembuka video { object-fit: cover; } }
+
+/* layar login & PIN di layar pendek / mendatar: bisa digulir & dua kolom */
+.layar-masuk, .layar-pin { overflow-y: auto; }
+@media (orientation: landscape) and (max-height: 820px) {
+  .layar-masuk, .layar-pin { padding: 14px; align-items: safe center; }
+  .kartu-pin { width: min(760px, 100%); display: grid; grid-template-columns: 1fr auto; grid-template-areas: "logo pad" "judul pad" "sub pad" "kode pad" "titik pad" "pesan pad" "bawah pad"; column-gap: 34px; align-content: center; align-items: center; padding: 22px 28px; text-align: center; }
+  .kartu-pin .logo-pin { grid-area: logo; justify-self: center; width: 64px; }
+  .kartu-pin h2 { grid-area: judul; margin-top: 6px; }
+  .kartu-pin .sub { grid-area: sub; }
+  .kartu-pin .kode-staf { grid-area: kode; }
+  .kartu-pin .titik-pin { grid-area: titik; margin: 14px 0 4px; }
+  .kartu-pin .pesan-pin { grid-area: pesan; }
+  .kartu-pin .tombol-pin { grid-area: pad; margin: 0; }
+  .kartu-pin > :last-child:not(.tombol-pin):not(.pesan-pin) { grid-area: bawah; }
+  .kartu-masuk { width: min(440px, 100%); padding: 20px 24px; }
+  .kartu-masuk .logo-masuk { width: 110px; }
+  .zk-saklar-wadah { margin-top: 12px; }
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  .tombol-pin button { width: 62px; height: 62px; font-size: 1.4rem; }
+}
+
+/* perpindahan halaman: zoom blur ringan (satu lapisan, GPU) */
+@keyframes zk-zoom-masuk { from { opacity: 0; transform: scale(1.04); filter: blur(7px); } 60% { filter: blur(0); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes zk-zoom-keluar { to { opacity: 0; transform: scale(.975); filter: blur(4px); } }
+.halaman.masuk { animation: zk-zoom-masuk .3s cubic-bezier(.22, 1, .36, 1) both; transform-origin: 50% 0; }
+body.zk-pindah .halaman { will-change: transform, opacity, filter; }
+.halaman.keluar { animation: zk-zoom-keluar .12s ease-in both; transform-origin: 50% 0; pointer-events: none; }
+.halaman.masuk .muncul, .halaman.keluar .muncul { animation: none; }
+/* selama berpindah, matikan efek mahal (blur kaca & cahaya) */
+body.zk-pindah :is(.topbar, .sidebar, .tabbar) { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+body.zk-pindah.tema-kaca .topbar { background: rgba(10, 14, 26, .96); }
+body.zk-pindah.tema-cerah .topbar { background: rgba(245, 248, 245, .97); }
+body.zk-pindah .halaman * { transition: none !important; }
+body.zk-pindah.tema-kaca .grafik .batang { filter: none; }
+@media (prefers-reduced-motion: reduce) { .halaman.masuk, .halaman.keluar { animation: none; } }
+
+/* grafik arus uang & barang */
+.arus-fig { position: relative; height: 230px; margin-top: 6px; }
+.arus-fig.kecil { height: 170px; }
+.arus-fig svg { position: absolute; inset: 0; display: block; }
+.arus-fig text { font-size: 10.5px; fill: var(--redup); }
+.arus-fig .g-garis { stroke: currentColor; opacity: .12; stroke-dasharray: 3 4; }
+.arus-fig rect { transform-origin: bottom; transform-box: fill-box; animation: tumbuh .6s var(--halus) both; animation-delay: calc(min(var(--i), 30) * 14ms); }
+.s-uang { fill: #10b981; background: #10b981; } .s-barang { fill: #3b82f6; background: #3b82f6; } .s-keluar { fill: #f97316; background: #f97316; }
+body.tema-mewah .s-uang { fill: #34d399; background: #34d399; } body.tema-mewah .s-barang { fill: #f6d27a; background: #f6d27a; } body.tema-mewah .s-keluar { fill: #cbd5e1; background: #cbd5e1; }
+.arus-leg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.arus-leg div { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 7px; padding: 8px 10px; border-radius: 12px; background: rgba(127, 127, 127, .08); }
+.arus-leg i { width: 10px; height: 10px; border-radius: 3px; grid-row: span 2; }
+.arus-leg span { font-size: .75rem; opacity: .75; }
+.arus-leg b { font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 560px) { .arus-leg { grid-template-columns: 1fr; } .arus-leg div { grid-template-columns: auto 1fr auto; } .arus-leg i { grid-row: auto; } }
+.kartu-arus .kartu-kepala h3 a { display: inline-flex; gap: 6px; align-items: center; }

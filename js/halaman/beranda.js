@@ -1,6 +1,7 @@
 import { api } from '../api.js';
+import { grafikArus } from '../grafik.js';
 import { sesi } from '../sesi.js';
-import { esc, ikon, rp, tgl, hariIni, awalHari, akhirHari, animasiAngka, PERAN, STATUS_SERVIS, $ } from '../ui.js';
+import { esc, ikon, rp, tgl, geserHari, hariIni, awalHari, akhirHari, animasiAngka, PERAN, STATUS_SERVIS, $ } from '../ui.js';
 
 function salam() {
   const j = Number(new Date().toLocaleString('en-US', { hour: 'numeric', hour12: false, timeZone: 'Asia/Makassar' }));
@@ -31,7 +32,9 @@ export default {
         <section class="kartu muncul d3"><div class="kartu-kepala"><h3><a href="#/transaksi">${ikon('list', 18)} Transaksi terakhir</a></h3><a href="#/transaksi" class="tautan">Semua ${ikon('chevron', 14)}</a></div><div id="trx-akhir"></div></section>
         <section class="kartu muncul d4"><div class="kartu-kepala"><h3><a href="#/produk?menipis=1">${ikon('alert', 18)} Stok hampir habis</a></h3><a href="#/produk?menipis=1" class="tautan">Lihat ${ikon('chevron', 14)}</a></div><div id="stok-tipis"></div></section>
       </div>
+      ${sesi.owner ? `<section class="kartu muncul d4 kartu-arus" id="arus-mini"></section>` : ''}
       <section class="kartu muncul d5" id="kotak-tugas" hidden></section>`;
+    if (sesi.owner) grafikArus($('#arus-mini', el), geserHari(h, -6), h, { judul: `<a href="#/laporan">${ikon('chart', 18)} 7 hari terakhir</a>`, kecil: true }).catch(() => { $('#arus-mini', el)?.remove(); });
 
     const jam = $('#jam', el);
     const putarJam = () => { if (!jam.isConnected) return clearInterval(t); jam.textContent = new Date().toLocaleString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Makassar' }); };
