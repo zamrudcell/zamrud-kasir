@@ -17,7 +17,7 @@ export default {
           <h2>${esc(s.nama)}</h2>
           <span class="pil-emas">${ikon('shield', 14)} ${esc(PERAN[s.peran])} · ${esc(s.kode)}</span>
         </div>
-        <img src="assets/gem.png" class="hero-gem" alt="">
+        <img src="assets/gem.png?v=2" class="hero-gem" alt="">
         <div class="hero-jam" id="jam"></div>
       </section>
       <section class="grid-stat" id="stat">${'<div class="stat kerangka"></div>'.repeat(4)}</section>

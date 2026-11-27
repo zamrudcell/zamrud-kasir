@@ -9,7 +9,7 @@ function tambahHari(d, n) { const x = new Date(d); x.setDate(x.getDate() + Numbe
 
 function kepala(p) {
   return `<div class="n-kepala">
-    <img src="assets/gem.png" alt="" class="n-logo">
+    <img src="assets/gem.png?v=2" alt="" class="n-logo">
     <div class="n-toko">${esc(p.nama_toko || 'ZAMRUD CELL')}</div>
     <div class="n-kecil">Service HP, iPhone, Android | Sparepart &amp; Aksesoris</div>
     ${p.alamat ? `<div class="n-kecil">${esc(p.alamat)}</div>` : ''}

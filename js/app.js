@@ -100,7 +100,7 @@ function layarLogin(pesan = '') {
 // ======================= SETUP PERTAMA =======================
 function layarSetupOwner() {
   akar.innerHTML = `<div class="layar-masuk"><div class="kartu-masuk muncul">
-    <img src="assets/gem.png" class="logo-masuk kecil" alt="">
+    <img src="assets/gem.png?v=2" class="logo-masuk kecil" alt="">
     <h1>Selamat datang 👋</h1>
     <p class="sub">Buat akun <b>Owner</b> pertama. Owner yang mengatur karyawan, shift, harga, promo dan bonus.</p>
     <form id="f-owner">
@@ -129,7 +129,7 @@ function papanPin({ judul, sub, kodeTetap = '', saatKirim, tombolBawah = '' }) {
   const wadah = document.createElement('div');
   wadah.className = 'layar-pin';
   wadah.innerHTML = `<div class="kartu-pin muncul">
-      <img src="assets/gem.png" class="logo-pin" alt="">
+      <img src="assets/gem.png?v=2" class="logo-pin" alt="">
       <h2>${esc(judul)}</h2><p class="sub">${esc(sub)}</p>
       <input class="input kode-staf" placeholder="Kode karyawan (mis. ZC01)" autocapitalize="characters" autocomplete="off" value="${esc(kodeTetap)}" ${kodeTetap ? 'readonly' : ''}>
       <div class="titik-pin">${'<i></i>'.repeat(6)}</div>
@@ -224,7 +224,7 @@ function kerangka() {
   const tab = ['beranda', sesi.bisaJual ? 'servis' : 'produk', tengah, sesi.bisaJual ? 'produk' : 'opname', 'menu'];
   akar.innerHTML = `<div class="app">
     <aside class="sidebar">
-      <div class="merek"><div class="ubin-logo"><img src="assets/gem.png" alt=""></div><div><b>ZAMRUD</b><small>KASIR</small></div></div>
+      <div class="merek"><div class="ubin-logo"><img src="assets/gem.png?v=2" alt=""></div><div><b>ZAMRUD</b><small>KASIR</small></div></div>
       <nav class="nav">${Object.entries(grup).map(([g, ids]) => `<div class="nav-grup">${g}</div>${ids.map(navItem).join('')}`).join('')}</nav>
       <div class="kartu-staf">
         ${avatar(s)}
