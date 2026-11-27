@@ -3,7 +3,7 @@ import { api } from './api.js';
 import { sesi, aksi, aturSaatSesiHabis, aturSaatTerkunci, mulaiPemantauKunci, setTerkunci } from './sesi.js';
 import { esc, ikon, $, $$, toast, salah, sibuk, lembar, PERAN, konfirmasi } from './ui.js';
 import { VERSI } from './config.js';
-import { terapkanTema, saklarLogo } from './efek.js';
+import { terapkanTema, saklarLogo, mulaiMusik, hentikanMusik } from './efek.js';
 
 terapkanTema();
 
@@ -50,9 +50,9 @@ function pembuka() {
       setTimeout(() => { el.remove(); }, 700);
       selesai();
     };
-    // suara pembuka (bila file assets/pembuka.mp3 sudah ditambahkan)
-    const suara = new Audio('assets/pembuka.mp3');
-    suara.play().catch(() => {});
+    // musik Zamrud (iPhone baru mengizinkan suara setelah layar disentuh)
+    mulaiMusik();
+    el.addEventListener('pointerdown', mulaiMusik, { once: true });
     v.addEventListener('ended', () => setTimeout(akhiri, 400));
     v.addEventListener('error', () => setTimeout(akhiri, 1200));
     $('.lewati', el).onclick = akhiri;
@@ -87,7 +87,7 @@ function layarLogin(pesan = '') {
   async function kirim() {
     if (proses) return;
     if (!f.reportValidity()) return;
-    proses = true; saklar.nyalakan();
+    proses = true; saklar.nyalakan(); mulaiMusik();
     try {
       await Promise.all([api.masuk(f.email.value.trim(), f.sandi.value), saklar.selesai()]);
       await mulai();
@@ -142,6 +142,7 @@ function papanPin({ judul, sub, kodeTetap = '', saatKirim, tombolBawah = '' }) {
   const gambar = () => titik.forEach((t, i) => t.classList.toggle('isi', i < pin.length));
   const goyang = (m) => { pesan.textContent = m; wadah.querySelector('.kartu-pin').classList.remove('goyang'); void wadah.offsetWidth; wadah.querySelector('.kartu-pin').classList.add('goyang'); pin = ''; gambar(); };
   const tekan = async (n) => {
+    mulaiMusik();
     if (n === 'C') pin = ''; else if (n === '⌫') pin = pin.slice(0, -1); else if (pin.length < 6) pin += n;
     gambar(); pesan.textContent = '';
     if (pin.length === 6) {
@@ -188,6 +189,7 @@ function kunciLayar() {
     saatKirim: async (kode, pin) => {
       await sesi.masuk(kode, pin);
       p.remove(); setTerkunci(false);
+      setTimeout(() => hentikanMusik(2500), 5000);
     },
   });
   p.classList.add('layar-kunci');
@@ -235,8 +237,8 @@ function kerangka() {
     </main>
     <nav class="tabbar">
       ${tab.map(id => id === tengah
-        ? `<a href="#/${id}" class="tab tengah" data-id="${id}"><span>${ikon(HALAMAN[id].ik, 28)}</span></a>`
-        : `<a href="#/${id}" class="tab" data-id="${id}">${ikon(HALAMAN[id].ik, 22)}<small>${esc(HALAMAN[id].pendek || HALAMAN[id].judul)}</small></a>`).join('')}
+        ? `<a href="#/${id}" class="tab tengah" data-id="${id}"><span class="tab-pil">${ikon(HALAMAN[id].ik, 28)}</span></a>`
+        : `<a href="#/${id}" class="tab" data-id="${id}"><span class="tab-pil">${ikon(HALAMAN[id].ik, 20)}<small>${esc(HALAMAN[id].pendek || HALAMAN[id].judul)}</small></span></a>`).join('')}
     </nav>
   </div>`;
   $$('[data-kunci]').forEach(b => b.onclick = kunciLayar);
@@ -245,6 +247,7 @@ function kerangka() {
     await sesi.keluar(); layarPin('Shift diakhiri. Sampai jumpa!');
   };
   $('.lonceng').onclick = bukaNotifikasi;
+  $$('.tab').forEach(t => t.addEventListener('click', () => { if (t.getAttribute('href') !== location.hash) t.classList.add('memuat'); }));
 }
 
 // ---------- notifikasi: stok menipis, retur menunggu, servis siap ----------
@@ -297,6 +300,9 @@ async function tampilkan() {
     halamanAktif = m.default;
     await m.default.tampil(wadah, { params: new URLSearchParams(location.hash.split('?')[1] || ''), segarkanNotif: muatNotifikasi });
     window.scrollTo({ top: 0 });
+    $$('.tab.memuat').forEach(t => t.classList.remove('memuat'));
+    const ta = $(`.tab[data-id="${id}"]`);
+    if (ta) { ta.classList.remove('sukses'); void ta.offsetWidth; ta.classList.add('sukses'); setTimeout(() => ta.classList.remove('sukses'), 900); }
   } catch (e) {
     if (giliran !== giliranTampil) return; // halaman sudah diganti
     console.error(e);
@@ -310,6 +316,7 @@ async function bukaAplikasi() {
   // pastikan token masih berlaku
   try { await aksi('cek_sesi'); } catch { return; }
   kerangka();
+  setTimeout(() => hentikanMusik(3000), 8000);
   await tampilkan();
   muatNotifikasi();
   clearInterval(window.__notif); window.__notif = setInterval(muatNotifikasi, 60000);

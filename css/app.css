@@ -691,3 +691,45 @@ body.tema-kaca .kartu-masuk .sub { color: #a3adc2; }
 body.tema-kaca .logo-masuk { box-shadow: 0 0 40px -10px rgba(246, 196, 83, .5); }
 body:not(.tema-kaca) .zk-saklar-ket { color: var(--tinta-2); }
 .baris-tombol { flex-wrap: wrap; } .baris-tombol .btn { flex: 1 1 140px; }
+
+/* =====================================================================
+   TAB BAWAH — kapsul kaca mengkilap (default / tekan / memuat / sukses)
+   ===================================================================== */
+.kartu h3 a { display: inline-flex; align-items: center; gap: 8px; }
+.tabbar { height: 78px; gap: 6px; padding: 0 8px; }
+.tab { --pil-a: #60a5fa; --pil-b: #2563eb; --pil-glow: #3b82f6; --pil-teks: #fff; gap: 0; }
+.tab[data-id="beranda"] { --pil-a: #6cb6ff; --pil-b: #1f6fe5; --pil-glow: #3b8cff; }
+.tab[data-id="servis"] { --pil-a: #ffc078; --pil-b: #f46f1c; --pil-glow: #ff8a2a; }
+.tab[data-id="produk"] { --pil-a: #ffffff; --pil-b: #cfd6e2; --pil-glow: #c7d2fe; --pil-teks: #1e293b; }
+.tab[data-id="opname"] { --pil-a: #c4b5fd; --pil-b: #7c3aed; --pil-glow: #8b5cf6; }
+.tab[data-id="menu"] { --pil-a: #ff7a7a; --pil-b: #d91f2f; --pil-glow: #ff3b4a; }
+.tab-pil { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; width: 100%; height: 58px; border-radius: 20px; overflow: hidden;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--pil-a) 22%, transparent), color-mix(in srgb, var(--pil-b) 14%, transparent));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pil-a) 35%, transparent), inset 0 1px 0 rgba(255, 255, 255, .18);
+  color: color-mix(in srgb, var(--pil-a) 70%, #fff); transition: transform .2s var(--pegas), box-shadow .3s, background .3s, color .3s; }
+.tab-pil::before { content: ""; position: absolute; left: 8%; right: 8%; top: 3px; height: 42%; border-radius: 16px 16px 40% 40%; background: linear-gradient(180deg, rgba(255, 255, 255, .45), rgba(255, 255, 255, 0)); opacity: .35; pointer-events: none; transition: opacity .3s; }
+.tab-pil small { font-size: .66rem; font-weight: 800; letter-spacing: .01em; color: inherit; white-space: nowrap; }
+/* aktif = kapsul menyala penuh (default/hover di contoh) */
+.tab.aktif .tab-pil { background: linear-gradient(180deg, var(--pil-a), var(--pil-b)); color: var(--pil-teks);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), inset 0 -3px 6px rgba(0, 0, 0, .18), 0 0 0 1px color-mix(in srgb, var(--pil-a) 60%, transparent), 0 6px 20px -4px var(--pil-glow), 0 0 26px -6px var(--pil-glow); }
+.tab.aktif .tab-pil::before { opacity: .9; }
+.tab.aktif { text-shadow: none !important; }
+/* ditekan */
+.tab:active .tab-pil { transform: scale(.92) translateY(1px); box-shadow: inset 0 3px 8px rgba(0, 0, 0, .35), 0 0 0 1px color-mix(in srgb, var(--pil-a) 50%, transparent); }
+/* memuat: kilau berputar di tepi */
+@keyframes zk-tab-muat { to { transform: rotate(360deg); } }
+.tab.memuat .tab-pil { background: linear-gradient(180deg, var(--pil-a), var(--pil-b)); color: var(--pil-teks); }
+.tab.memuat .tab-pil::after { content: ""; position: absolute; inset: -60%; background: conic-gradient(from 0deg, transparent 0 70%, rgba(255, 255, 255, .85) 80%, transparent 90%); animation: zk-tab-muat .9s linear infinite; mix-blend-mode: overlay; }
+/* sukses: denyut cahaya */
+@keyframes zk-tab-sukses { 0% { transform: scale(.9); } 45% { transform: scale(1.08); box-shadow: 0 0 0 6px color-mix(in srgb, var(--pil-a) 25%, transparent), 0 0 34px var(--pil-glow); } 100% { transform: scale(1); } }
+.tab.sukses .tab-pil { animation: zk-tab-sukses .7s var(--pegas); }
+/* tombol tengah (kasir) = kapsul "focus" biru tua */
+.tab.tengah { margin-top: -26px; }
+.tab.tengah .tab-pil { width: 70px; height: 70px; border-radius: 24px; color: #fff;
+  background: linear-gradient(180deg, #2f4fb8, #0f1f5c); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 -4px 8px rgba(0, 0, 0, .3), 0 0 0 2px rgba(96, 165, 250, .55), 0 10px 26px -6px rgba(37, 99, 235, .8); }
+.tab.tengah .tab-pil::before { opacity: .7; }
+.tab.tengah.aktif .tab-pil { background: linear-gradient(180deg, #1fbf86, #075c3f); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -4px 8px rgba(0, 0, 0, .3), 0 0 0 2px rgba(110, 231, 183, .6), 0 10px 30px -6px rgba(16, 185, 129, .85); transform: translateY(-2px); }
+.tab.tengah span { width: auto; height: auto; }
+body:not(.tema-kaca) .tabbar { background: rgba(255, 255, 255, .85); border: 1px solid rgba(15, 23, 42, .06); }
+body:not(.tema-kaca) .tab:not(.aktif):not(.memuat):not(.tengah) .tab-pil { color: var(--pil-b); background: linear-gradient(180deg, color-mix(in srgb, var(--pil-a) 30%, #fff), color-mix(in srgb, var(--pil-b) 18%, #fff)); }
+body:not(.tema-kaca) .tab[data-id="produk"]:not(.aktif) .tab-pil { color: #475569; background: linear-gradient(180deg, #fff, #e2e8f0); box-shadow: inset 0 0 0 1px #cbd5e1, inset 0 1px 0 #fff; }

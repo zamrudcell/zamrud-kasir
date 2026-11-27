@@ -40,6 +40,26 @@ const NADA_UI = {
 };
 export function sfx(nama) { if (!suaraNyala()) return; try { NADA_UI[nama] && NADA_UI[nama](); } catch (err) {} }
 
+// ---------------- Musik Zamrud (pembuka / saat memasukkan sandi) ----------------
+let musik = null, pemudar = null;
+export function mulaiMusik() {
+  if (!suaraNyala()) return;
+  try {
+    if (!musik) { musik = new Audio('assets/musik.mp3'); musik.preload = 'auto'; }
+    clearInterval(pemudar); musik.volume = .8;
+    if (musik.paused) musik.play().catch(() => {});
+  } catch {}
+}
+export function hentikanMusik(ms = 2500) {
+  if (!musik || musik.paused) return;
+  clearInterval(pemudar);
+  const awal = musik.volume, langkah = 50, n = Math.max(1, ms / langkah); let i = 0;
+  pemudar = setInterval(() => {
+    i++; musik.volume = Math.max(0, awal * (1 - i / n));
+    if (i >= n) { clearInterval(pemudar); musik.pause(); musik.currentTime = 0; musik.volume = .8; }
+  }, langkah);
+}
+
 // ---------------- 1. Jeli memantul saat kotak disentuh ----------------
 const JELI_KARTU = '.stat, .kotak-status, .kartu-produk, .aksi, .kartu-staf-besar, .kartu-profil';
 const JELI_BARIS = '.menu-baris, .baris-servis, .baris-daftar, .baris-promo, .nav-item, .tab:not(.tengah)';

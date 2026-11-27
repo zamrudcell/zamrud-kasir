@@ -28,8 +28,8 @@ export default {
         <a href="#/opname" class="aksi">${ikon('clip', 26)}<span>Opname</span></a>
       </section>
       <div class="dua-kolom">
-        <section class="kartu muncul d3"><div class="kartu-kepala"><h3>${ikon('list', 18)} Transaksi terakhir</h3><a href="#/transaksi" class="tautan">Semua ${ikon('chevron', 14)}</a></div><div id="trx-akhir"></div></section>
-        <section class="kartu muncul d4"><div class="kartu-kepala"><h3>${ikon('alert', 18)} Stok hampir habis</h3><a href="#/produk?menipis=1" class="tautan">Lihat ${ikon('chevron', 14)}</a></div><div id="stok-tipis"></div></section>
+        <section class="kartu muncul d3"><div class="kartu-kepala"><h3><a href="#/transaksi">${ikon('list', 18)} Transaksi terakhir</a></h3><a href="#/transaksi" class="tautan">Semua ${ikon('chevron', 14)}</a></div><div id="trx-akhir"></div></section>
+        <section class="kartu muncul d4"><div class="kartu-kepala"><h3><a href="#/produk?menipis=1">${ikon('alert', 18)} Stok hampir habis</a></h3><a href="#/produk?menipis=1" class="tautan">Lihat ${ikon('chevron', 14)}</a></div><div id="stok-tipis"></div></section>
       </div>
       <section class="kartu muncul d5" id="kotak-tugas" hidden></section>`;
 
@@ -50,8 +50,8 @@ export default {
     const aktif = servis.filter(x => x.status !== 'siap_diambil').length;
     const siap = servis.filter(x => x.status === 'siap_diambil').length;
     $('#stat', el).innerHTML = `
-      <div class="stat emas muncul"><small>${ikon('money', 14)} ${sesi.owner ? 'Penjualan hari ini' : 'Penjualan saya hari ini'}</small><b data-hitung="${omzet}" data-rp>Rp 0</b>${sesi.owner ? `<em>Laba kotor ${rp(laba)}</em>` : ''}</div>
-      <div class="stat muncul d1"><small>${ikon('list', 14)} Transaksi</small><b data-hitung="${trx.length}">0</b><em>hari ini</em></div>
+      <a href="#/${sesi.owner ? 'laporan' : 'tugas'}" class="stat emas muncul"><small>${ikon('money', 14)} ${sesi.owner ? 'Penjualan hari ini' : 'Penjualan saya hari ini'}</small><b data-hitung="${omzet}" data-rp>Rp 0</b><em>${sesi.owner ? `Laba kotor ${rp(laba)}` : 'lihat bonus saya'}</em></a>
+      <a href="#/transaksi" class="stat muncul d1"><small>${ikon('list', 14)} Transaksi</small><b data-hitung="${trx.length}">0</b><em>hari ini · lihat riwayat</em></a>
       <a href="#/servis" class="stat biru muncul d2"><small>${ikon('tool', 14)} Servis aktif</small><b data-hitung="${aktif}">0</b><em>antri & dikerjakan</em></a>
       <a href="#/servis" class="stat hijau muncul d3"><small>${ikon('check', 14)} Siap diambil</small><b data-hitung="${siap}">0</b><em>${sesi.owner && retur.length ? retur.length + ' retur menunggu' : 'hubungi pelanggan'}</em></a>`;
     animasiAngka($('#stat', el));
@@ -65,7 +65,7 @@ export default {
 
     if (!sesi.owner) {
       const k = $('#kotak-tugas', el); k.hidden = false;
-      k.innerHTML = `<div class="kartu-kepala"><h3>${ikon('star', 18)} Tugas saya hari ini</h3><a href="#/tugas" class="tautan">Semua ${ikon('chevron', 14)}</a></div>
+      k.innerHTML = `<div class="kartu-kepala"><h3><a href="#/tugas">${ikon('star', 18)} Tugas saya hari ini</a></h3><a href="#/tugas" class="tautan">Semua ${ikon('chevron', 14)}</a></div>
         ${tugas.length ? tugas.map(g => `<div class="baris-ringkas"><span>${esc(g.judul)}</span><span class="pil ${g.status === 'baru' ? 'abu' : g.status === 'disetujui' ? 'hijau' : 'kuning'}">${esc(g.status)}</span></div>`).join('') : '<p class="redup">Tidak ada tugas khusus hari ini.</p>'}`;
     }
   },
