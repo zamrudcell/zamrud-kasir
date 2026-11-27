@@ -27,9 +27,19 @@ export const dataProduk = (semua = false) => ambilCache('produk' + (semua ? 'S' 
   return d;
 }, 15000);
 
+// cadangan sebelum SQL 003 dijalankan: baca kolom langsung (setelah 003 database menolaknya)
+async function cadangan(tabel, ids) {
+  try {
+    const kol = tabel === 'transaksi' ? 'modal' : 'harga_beli', kunci = tabel === 'opname_item' ? 'produk_id' : 'id';
+    const filter = !ids ? {} : { inn: { [tabel === 'opname_item' ? 'opname_id' : 'id']: ids } };
+    const d = await api.ambil(tabel, { select: kunci + ',' + kol, semua: true, ...filter });
+    return Object.fromEntries(d.map(x => [x[kunci], Number(x[kol]) || 0]));
+  } catch { return {}; }
+}
+
 // modal / harga beli — hanya owner (database menolak karyawan). Hasil: { id: nilai }
 export async function ambilModal(tabel, ids = null) {
   if (!sesi.owner || (ids && !ids.length)) return {};
-  let r; try { r = await aksi('data_modal', { p_tabel: tabel, p_ids: ids }); } catch { return {}; } // SQL 003 belum dijalankan
+  let r; try { r = await aksi('data_modal', { p_tabel: tabel, p_ids: ids }); } catch { return cadangan(tabel, ids); } // SQL 003 belum dijalankan
   return Object.fromEntries((r || []).map(x => [x.id, Number(x.nilai) || 0]));
 }
