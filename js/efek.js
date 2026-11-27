@@ -6,9 +6,13 @@ export const tema = () => ambil('zk_tema', 'kaca');
 export const suaraNyala = () => ambil('zk_suara', '1') === '1';
 export function setTema(t) { simpan('zk_tema', t); terapkanTema(); }
 export function setSuara(on) { simpan('zk_suara', on ? '1' : '0'); }
+export const musikNyala = () => ambil('zk_musik', '1') === '1';
 export function terapkanTema() {
-  document.body.classList.toggle('tema-kaca', tema() === 'kaca');
-  document.querySelector('meta[name=theme-color]')?.setAttribute('content', tema() === 'kaca' ? '#070b16' : '#063826');
+  const t = tema();
+  document.body.classList.toggle('tema-kaca', t === 'kaca' || t === 'mewah');
+  document.body.classList.toggle('tema-mewah', t === 'mewah');
+  document.body.classList.toggle('tema-cerah', t === 'terang');
+  document.querySelector('meta[name=theme-color]')?.setAttribute('content', t === 'terang' ? '#e9efe9' : t === 'mewah' ? '#0b0a07' : '#070b16');
 }
 const geraknya = () => !matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -44,24 +48,29 @@ const NADA_UI = {
 };
 export function sfx(nama) { if (!suaraNyala()) return; try { NADA_UI[nama] && NADA_UI[nama](); } catch (err) {} }
 
-// ---------------- Musik Zamrud (pembuka / saat memasukkan sandi) ----------------
-let musik = null, pemudar = null;
-export function mulaiMusik() {
-  if (!suaraNyala()) return;
-  try {
-    if (!musik) { musik = new Audio('assets/musik.mp3'); musik.preload = 'auto'; }
-    clearInterval(pemudar); musik.volume = .8;
-    if (musik.paused) musik.play().catch(() => {});
-  } catch {}
+// ---------------- Musik Zamrud: berputar terus, berhenti hanya bila pengguna menekan tombol musik ----------------
+let musik = null;
+const pendengarMusik = new Set();
+export const saatMusikBerubah = (f) => { pendengarMusik.add(f); return () => pendengarMusik.delete(f); };
+const kabari = () => pendengarMusik.forEach(f => { try { f(musikJalan()); } catch {} });
+export const musikJalan = () => !!musik && !musik.paused;
+function siapkanMusik() {
+  if (!musik) {
+    musik = new Audio('assets/musik.mp3'); musik.loop = true; musik.preload = 'auto'; musik.volume = .7;
+    musik.addEventListener('play', kabari); musik.addEventListener('pause', kabari);
+  }
+  return musik;
 }
-export function hentikanMusik(ms = 2500) {
-  if (!musik || musik.paused) return;
-  clearInterval(pemudar);
-  const awal = musik.volume, langkah = 50, n = Math.max(1, ms / langkah); let i = 0;
-  pemudar = setInterval(() => {
-    i++; musik.volume = Math.max(0, awal * (1 - i / n));
-    if (i >= n) { clearInterval(pemudar); musik.pause(); musik.currentTime = 0; musik.volume = .8; }
-  }, langkah);
+export function mulaiMusik() {
+  if (!musikNyala()) return;
+  try { const m = siapkanMusik(); if (m.paused) m.play().catch(() => {}); } catch {}
+}
+export function hentikanMusik() { /* musik tidak berhenti otomatis */ }
+export function tombolMusik() {
+  const m = siapkanMusik();
+  if (m.paused) { simpan('zk_musik', '1'); m.play().catch(() => {}); }
+  else { simpan('zk_musik', '0'); m.pause(); }
+  kabari();
 }
 
 // ---------------- 1. Jeli memantul saat kotak disentuh ----------------

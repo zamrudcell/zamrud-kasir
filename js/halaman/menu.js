@@ -1,5 +1,5 @@
 import { sesi } from '../sesi.js';
-import { esc, ikon, PERAN, $ } from '../ui.js';
+import { esc, ikon, PERAN, $, avatar, namaStaf } from '../ui.js';
 import { HALAMAN, bolehBuka } from '../app.js';
 
 export default {
@@ -9,8 +9,8 @@ export default {
     for (const [id, h] of Object.entries(HALAMAN)) if (!h.tersembunyi && bolehBuka(id)) (grup[h.grup] ||= []).push([id, h]);
     el.innerHTML = `
       <section class="kartu-profil muncul">
-        <div class="avatar besar" style="--w:${esc(s.warna || '#10b981')}">${esc(s.nama[0])}</div>
-        <div><b>${esc(s.nama)}</b><small>${esc(PERAN[s.peran])} · ${esc(s.kode)}</small></div>
+        ${avatar(s, 'besar')}
+        <div>${namaStaf(s)}<small>${esc(PERAN[s.peran])} · ${esc(s.kode)}</small></div>
         <button class="btn gelap kecil" id="kunci">${ikon('lock', 16)} Kunci</button>
       </section>
       ${Object.entries(grup).map(([g, d], gi) => `<div class="menu-grup muncul" style="--i:${gi}"><div class="lbl-kecil">${g}</div>

@@ -1,9 +1,9 @@
 // ZAMRUD KASIR — alur utama: pembuka → login akun toko → PIN karyawan → aplikasi
 import { api } from './api.js';
 import { sesi, aksi, aturSaatSesiHabis, aturSaatTerkunci, mulaiPemantauKunci, setTerkunci } from './sesi.js';
-import { esc, ikon, $, $$, toast, salah, sibuk, lembar, PERAN, konfirmasi } from './ui.js';
+import { esc, ikon, $, $$, toast, salah, sibuk, lembar, PERAN, konfirmasi, avatar, namaStaf } from './ui.js';
 import { VERSI } from './config.js';
-import { terapkanTema, saklarLogo, mulaiMusik, hentikanMusik, menuDorong, sfx } from './efek.js';
+import { terapkanTema, saklarLogo, mulaiMusik, hentikanMusik, menuDorong, sfx, tombolMusik, saatMusikBerubah, musikJalan } from './efek.js';
 
 terapkanTema();
 
@@ -199,7 +199,6 @@ function kunciLayar() {
     saatKirim: async (kode, pin) => {
       await sesi.masuk(kode, pin);
       p.remove(); setTerkunci(false);
-      setTimeout(() => hentikanMusik(2500), 5000);
     },
   });
   p.classList.add('layar-kunci');
@@ -228,8 +227,8 @@ function kerangka() {
       <div class="merek"><div class="ubin-logo"><img src="assets/gem.png" alt=""></div><div><b>ZAMRUD</b><small>KASIR</small></div></div>
       <nav class="nav">${Object.entries(grup).map(([g, ids]) => `<div class="nav-grup">${g}</div>${ids.map(navItem).join('')}`).join('')}</nav>
       <div class="kartu-staf">
-        <div class="avatar" style="--w:${esc(s.warna || '#10b981')}">${esc((s.nama || '?')[0])}</div>
-        <div class="info"><b>${esc(s.nama)}</b><small>${esc(PERAN[s.peran])} · ${esc(s.kode)}</small></div>
+        ${avatar(s)}
+        <div class="info">${namaStaf(s)}<small>${esc(PERAN[s.peran])} · ${esc(s.kode)}</small></div>
         <button class="btn-ikon" data-kunci title="Kunci layar">${ikon('lock', 18)}</button>
         <button class="btn-ikon" data-keluar title="Akhiri shift">${ikon('logout', 18)}</button>
       </div>
@@ -238,6 +237,7 @@ function kerangka() {
       <header class="topbar">
         <h1 id="judul-halaman">Beranda</h1>
         <div class="topbar-kanan">
+          <button class="btn-musik" aria-label="Musik" title="Putar / hentikan musik"><i></i><i></i><i></i><i></i></button>
           <span class="chip-staf" data-kunci>${ikon('user', 14)} ${esc(s.nama)}</span>
           <button class="btn-ikon lonceng" aria-label="Notifikasi">${ikon('bell')}<b class="lencana" hidden>0</b></button>
         </div>
@@ -257,6 +257,10 @@ function kerangka() {
     await sesi.keluar(); layarPin('Shift diakhiri. Sampai jumpa!');
   };
   $('.lonceng').onclick = bukaNotifikasi;
+  const bm = $('.btn-musik');
+  const segarMusik = (jalan) => bm && bm.classList.toggle('jalan', jalan);
+  bm.onclick = () => tombolMusik();
+  segarMusik(musikJalan()); saatMusikBerubah(segarMusik);
   $$('.tab').forEach(t => t.addEventListener('click', (e) => {
     if (t.dataset.id === 'menu') { e.preventDefault(); bukaMenuDorong(); return; }
     if (t.getAttribute('href') !== location.hash) t.classList.add('memuat');
@@ -270,7 +274,7 @@ function bukaMenuDorong() {
   const tabMenu = $('.tab[data-id="menu"]');
   tabMenu?.classList.add('aktif');
   menuDorong({
-    isiHTML: `<div class="zd-profil"><div class="avatar" style="--w:${esc(s.warna || '#10b981')}">${esc((s.nama || '?')[0])}</div><div><b>${esc(s.nama)}</b><small>${esc(PERAN[s.peran])} · ${esc(s.kode)}</small></div></div>
+    isiHTML: `<div class="zd-profil">${avatar(s, 'besar')}<div>${namaStaf(s)}<small>${esc(PERAN[s.peran])} · ${esc(s.kode)}</small></div></div>
       <div class="zd-daftar">${Object.entries(grup).map(([g, ids]) => `<div class="zd-grup">${g}</div>${ids.map(id => `<a href="#/${id}" class="zd-item ${id === kini ? 'on' : ''}">${ikon(HALAMAN[id].ik, 18)}<span>${esc(HALAMAN[id].pendek || HALAMAN[id].judul)}</span></a>`).join('')}`).join('')}</div>
       <div class="zd-bawah"><button class="btn kecil gelap" data-zd="kunci">${ikon('lock', 16)} Kunci</button><button class="btn kecil merah-garis" data-zd="keluar">${ikon('logout', 16)} Akhiri shift</button></div>`,
     saatTutup: () => { if (kini !== 'menu') tabMenu?.classList.remove('aktif'); },
@@ -346,7 +350,6 @@ async function bukaAplikasi() {
   // pastikan token masih berlaku
   try { await aksi('cek_sesi'); } catch { return; }
   kerangka();
-  setTimeout(() => hentikanMusik(3000), 8000);
   await tampilkan();
   muatNotifikasi();
   setTimeout(() => Object.values(HALAMAN).forEach(h => h.muat().catch(() => {})), 1500); // siapkan semua halaman agar cepat dibuka

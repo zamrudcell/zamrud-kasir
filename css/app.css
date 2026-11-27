@@ -788,3 +788,110 @@ body:not(.tema-kaca).zk-dorong-buka { background: #e6e3dc; }
 .dua-kolom > *, .grid-stat > *, .form-grid > * { min-width: 0; }
 .kartu-kepala .segmen, .kartu > .segmen { max-width: 100%; }
 html, body { overflow-x: hidden; }
+
+/* =====================================================================
+   v1.4 — latar logo & sirkuit, avatar owner, tombol musik, menu kaca, tema Emas & Kaca Terang
+   ===================================================================== */
+/* latar: logo blur + jalur sirkuit samar (semua tema) */
+body::after { content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none; background: url("../assets/latar.webp") center 40% / min(900px, 140vw) auto no-repeat; opacity: .16; }
+body.tema-mewah::after { opacity: .2; }
+body.tema-cerah::after { opacity: .22; filter: saturate(1.2); }
+body:not(.tema-kaca):not(.tema-cerah)::after { opacity: .1; }
+#akar, .app { position: relative; z-index: 1; }
+
+/* avatar owner: logo permata dengan cincin emas-hijau-perak */
+.avatar-owner { position: relative; background: #0b1410 !important; padding: 3px; overflow: visible; }
+.avatar-owner::before { content: ""; position: absolute; inset: -3px; border-radius: inherit; z-index: -1;
+  background: conic-gradient(from 210deg, #f6d27a, #b8892f, #34d399, #0e7a55, #e5e7eb, #94a3b8, #f6d27a); animation: zk-cincin 6s linear infinite; }
+.avatar-owner::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: 0 0 18px -2px rgba(246, 210, 122, .55), 0 0 26px -6px rgba(52, 211, 153, .6); pointer-events: none; }
+.avatar-owner img { width: 100%; height: 100%; object-fit: contain; border-radius: inherit; background: radial-gradient(circle at 50% 40%, #15322a, #050b08); padding: 3px; }
+@keyframes zk-cincin { to { filter: hue-rotate(0deg); transform: rotate(360deg); } }
+.avatar-owner::before { animation: none; }
+.nama-owner { background: linear-gradient(90deg, #f6d27a, #e5e7eb 45%, #6ee7b7 75%, #f6d27a); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent !important; animation: kilau 6s linear infinite; letter-spacing: .02em; }
+
+/* tombol musik (equalizer) */
+.btn-musik { display: inline-flex; align-items: flex-end; justify-content: center; gap: 3px; width: 40px; height: 40px; padding: 11px 9px; border-radius: 13px;
+  background: rgba(127, 127, 127, .12); box-shadow: inset 0 0 0 1px rgba(127, 127, 127, .25); transition: transform .2s var(--pegas), box-shadow .3s; }
+.btn-musik:active { transform: scale(.9); }
+.btn-musik i { width: 3px; height: 30%; border-radius: 2px; background: currentColor; opacity: .55; }
+.btn-musik.jalan { color: #34d399; box-shadow: inset 0 0 0 1px rgba(52, 211, 153, .5), 0 0 16px -4px #34d399; }
+.btn-musik.jalan i { opacity: 1; animation: zk-eq .9s ease-in-out infinite; }
+.btn-musik.jalan i:nth-child(2) { animation-delay: -.3s; } .btn-musik.jalan i:nth-child(3) { animation-delay: -.6s; } .btn-musik.jalan i:nth-child(4) { animation-delay: -.15s; }
+@keyframes zk-eq { 0%, 100% { height: 25%; } 50% { height: 100%; } }
+body.tema-mewah .btn-musik.jalan { color: #f6d27a; box-shadow: inset 0 0 0 1px rgba(246, 210, 122, .55), 0 0 16px -4px #f6d27a; }
+
+/* menu dorong & sidebar: kaca */
+.zd-profil { padding: 12px; border-radius: 18px; background: linear-gradient(160deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, .03)); border: 1px solid rgba(255, 255, 255, .14); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18); }
+.zd-item { background: linear-gradient(160deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .02)); border: 1px solid rgba(255, 255, 255, .08); margin-bottom: 4px; letter-spacing: .06em; font-size: .78rem; }
+.zd-item.on { border-color: rgba(110, 231, 183, .5); box-shadow: 0 0 16px -6px #34d399, inset 0 1px 0 rgba(255, 255, 255, .15); }
+.zd-item .ik { flex: none; }
+body.tema-kaca .kartu-staf, body.tema-kaca .ubin-logo { background: linear-gradient(160deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .03)); border: 1px solid rgba(255, 255, 255, .12); }
+body.tema-kaca .ubin-logo { background: radial-gradient(circle at 50% 40%, #15322a, #050b08); box-shadow: 0 0 0 2px rgba(246, 210, 122, .5), 0 0 20px -4px rgba(52, 211, 153, .6); }
+body.tema-kaca .filter-bar .lbl-filter { color: #a3adc2; }
+
+/* ---------------- TEMA EMAS · PERAK · HIJAU (gelap) ---------------- */
+body.tema-mewah {
+  --neon: #f6d27a; --kaca: linear-gradient(160deg, rgba(255, 245, 220, .10), rgba(255, 255, 255, .02) 60%); --tepi: rgba(246, 210, 122, .22);
+  background: #0b0a07 radial-gradient(1100px 700px at 10% -10%, rgba(201, 162, 74, .25), transparent 60%), radial-gradient(900px 700px at 100% 20%, rgba(14, 122, 85, .25), transparent 60%), radial-gradient(800px 600px at 50% 110%, rgba(203, 213, 225, .12), transparent 60%);
+}
+body.tema-mewah .stat { --neon: #6ee7b7; } body.tema-mewah .stat.emas { --neon: #f6d27a; } body.tema-mewah .stat.biru { --neon: #e5e7eb; }
+body.tema-mewah .stat.hijau { --neon: #34d399; } body.tema-mewah .stat.merah { --neon: #fca5a5; }
+body.tema-mewah .kotak-status { --neon: #f6d27a; } body.tema-mewah .kotak-status.biru { --neon: #e5e7eb; } body.tema-mewah .kotak-status.biru small { color: #e5e7eb; }
+body.tema-mewah .kotak-status.kuning { --neon: #f6d27a; } body.tema-mewah .kotak-status.hijau { --neon: #34d399; }
+body.tema-mewah .aksi:nth-child(4n+1) { --neon: #34d399; } body.tema-mewah .aksi:nth-child(4n+2) { --neon: #f6d27a; }
+body.tema-mewah .aksi:nth-child(4n+3) { --neon: #e5e7eb; } body.tema-mewah .aksi:nth-child(4n+4) { --neon: #d4a64a; }
+body.tema-mewah .kartu-produk { --neon: #d6c08a; }
+body.tema-mewah .hero { --neon: #f6d27a; background: linear-gradient(150deg, rgba(201, 162, 74, .75), rgba(6, 56, 38, .9) 55%, rgba(203, 213, 225, .35)); }
+body.tema-mewah .kartu-hangat { --neon: #f6d27a; background: linear-gradient(150deg, rgba(201, 162, 74, .55), rgba(120, 90, 30, .35) 55%, rgba(30, 25, 15, .5)); }
+body.tema-mewah .kartu-gelap { background: linear-gradient(150deg, rgba(203, 213, 225, .2), rgba(20, 20, 18, .75) 60%); border-color: rgba(229, 231, 235, .3); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 0 40px -14px #e5e7eb, 0 20px 50px -20px rgba(0, 0, 0, .8); }
+body.tema-mewah .btn.utama { background: linear-gradient(180deg, #1fae7a, #0a5c40); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 0 0 1px rgba(246, 210, 122, .55), 0 0 22px -4px rgba(246, 210, 122, .55); }
+body.tema-mewah .btn.oranye, body.tema-mewah .btn-ikon.oranye { background: linear-gradient(180deg, #f6d27a, #b8892f); color: #1d1607; box-shadow: 0 0 22px -4px rgba(246, 210, 122, .7); }
+body.tema-mewah .tab-garis button.aktif { color: #f6d27a; border-bottom-color: #f6d27a; }
+body.tema-mewah:not([data-halaman="servis"]) .tab-garis button.aktif { color: #f6d27a; border-bottom-color: #f6d27a; }
+body.tema-mewah .segmen button.aktif, body.tema-mewah .chip.aktif { background: rgba(246, 210, 122, .18); box-shadow: inset 0 0 0 1px rgba(246, 210, 122, .55), 0 0 14px -4px #f6d27a; }
+body.tema-mewah .tab[data-id="beranda"] { --pil-a: #6ee7b7; --pil-b: #0e7a55; --pil-glow: #34d399; }
+body.tema-mewah .tab[data-id="servis"] { --pil-a: #f9e3a3; --pil-b: #b8892f; --pil-glow: #f6d27a; --pil-teks: #1d1607; }
+body.tema-mewah .tab[data-id="menu"] { --pil-a: #f6d27a; --pil-b: #8a6a22; --pil-glow: #d4a64a; --pil-teks: #1d1607; }
+body.tema-mewah .tab.tengah .tab-pil { background: linear-gradient(180deg, #2b2b2b, #0c0c0c); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 0 0 2px rgba(246, 210, 122, .7), 0 10px 26px -6px rgba(201, 162, 74, .8); color: #f6d27a; }
+body.tema-mewah .tab.tengah.aktif .tab-pil { background: linear-gradient(180deg, #f6d27a, #a8832f); color: #1d1607; }
+body.tema-mewah .tabbar { box-shadow: 0 14px 40px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 255, 255, .1), 0 0 30px -12px #f6d27a; border-color: rgba(246, 210, 122, .2); }
+body.tema-mewah .topbar h1 { text-shadow: 0 0 24px rgba(246, 210, 122, .3); }
+body.tema-mewah .zd-item.on { border-color: rgba(246, 210, 122, .55); box-shadow: 0 0 16px -6px #f6d27a; } body.tema-mewah .zd-item.on::before { background: #f6d27a; box-shadow: 0 0 10px #f6d27a; }
+body.tema-mewah .mi-ikon { background: linear-gradient(160deg, #f6d27a, #a8832f); color: #1d1607; box-shadow: 0 0 12px -3px #f6d27a; }
+body.tema-mewah .grafik .batang { fill: #f6d27a; filter: drop-shadow(0 0 6px rgba(246, 210, 122, .6)); }
+@media (min-width: 900px) { body.tema-mewah .nav-item.aktif { background: linear-gradient(90deg, rgba(246, 210, 122, .2), rgba(246, 210, 122, .03)); box-shadow: inset 0 0 0 1px rgba(246, 210, 122, .35), 0 0 18px -6px #f6d27a; } body.tema-mewah .nav-item.aktif .ik { color: #f6d27a; } }
+
+/* ---------------- TEMA KACA TERANG ---------------- */
+body.tema-cerah {
+  --gading: #e9efe9; --kaca-c: linear-gradient(160deg, rgba(255, 255, 255, .78), rgba(255, 255, 255, .42));
+  background: #e9efe9 radial-gradient(1000px 700px at 0% -10%, rgba(52, 211, 153, .28), transparent 60%), radial-gradient(900px 700px at 100% 10%, rgba(246, 210, 122, .3), transparent 60%), radial-gradient(800px 700px at 50% 110%, rgba(148, 163, 184, .3), transparent 60%);
+}
+body.tema-cerah :is(.kartu, .stat, .aksi, .kotak-status, .kartu-produk, .ringkas-angka > div, .menu-ios, .kartu-staf-besar, .kasir-kanan, .chip-staf, .tab-garis, .ket-opname, .kartu-masuk, .grid-info > div, .tabel-ringkas, .lipat, .kelompok-hp, .zd-item, .zd-profil) {
+  background: var(--kaca-c); border: 1px solid rgba(255, 255, 255, .9); box-shadow: inset 0 1px 0 #fff, 0 12px 30px -14px rgba(15, 23, 42, .25), 0 0 0 1px rgba(15, 23, 42, .04);
+}
+body.tema-cerah :is(.stat, .kotak-status) { border-left: 4px solid var(--neon-c, #94a3b8); }
+body.tema-cerah .stat.emas { --neon-c: var(--emas); } body.tema-cerah .stat.biru, body.tema-cerah .kotak-status.biru { --neon-c: var(--biru); }
+body.tema-cerah .stat.hijau, body.tema-cerah .kotak-status.hijau { --neon-c: var(--hijau); } body.tema-cerah .stat.merah, body.tema-cerah .kotak-status.merah { --neon-c: var(--merah); }
+body.tema-cerah .kotak-status.kuning { --neon-c: #f59e0b; }
+body.tema-cerah :is(.hero, .total-besar) { border: 1px solid rgba(255, 255, 255, .6); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), 0 18px 40px -16px rgba(6, 56, 38, .5); }
+body.tema-cerah .hero { background: linear-gradient(150deg, rgba(24, 167, 116, .92), rgba(10, 92, 64, .92) 60%, rgba(201, 162, 74, .85)); }
+body.tema-cerah .kartu-hangat { background: linear-gradient(135deg, rgba(255, 237, 213, .85), rgba(255, 247, 233, .6)); border: 1px solid #fff; }
+body.tema-cerah .kartu-gelap { background: linear-gradient(150deg, rgba(30, 41, 59, .88), rgba(15, 23, 42, .92)); border: 1px solid rgba(255, 255, 255, .3); }
+body.tema-cerah .topbar { background: rgba(255, 255, 255, .45); border-bottom-color: rgba(255, 255, 255, .7); }
+body.tema-cerah .tabbar { background: rgba(255, 255, 255, .55); border: 1px solid rgba(255, 255, 255, .9); box-shadow: 0 14px 40px -10px rgba(15, 23, 42, .3), inset 0 1px 0 #fff; backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); }
+body.tema-cerah .lembar { background: rgba(255, 255, 255, .86); backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%); border: 1px solid #fff; }
+body.tema-cerah .input { background: rgba(255, 255, 255, .7); border-color: rgba(15, 23, 42, .1); }
+body.tema-cerah .btn:not(.utama):not(.oranye):not(.emas):not(.merah):not(.merah-garis):not(.gelap) { background: rgba(255, 255, 255, .7); box-shadow: inset 0 0 0 1px rgba(15, 23, 42, .08), inset 0 1px 0 #fff; }
+body.tema-cerah .zd-item { color: #334155; } body.tema-cerah .zd-item.on { color: var(--zamrud-2); border-color: rgba(14, 122, 85, .35); }
+body.tema-cerah .zd-grup { color: #64748b; }
+body.tema-cerah.zk-dorong-buka { background: #dfe7df; }
+body.tema-cerah.zk-dorong-buka .utama { background: rgba(233, 239, 233, .96); }
+@media (min-width: 900px) {
+  body.tema-cerah .sidebar { background: rgba(255, 255, 255, .5); color: var(--tinta); border-right: 1px solid rgba(255, 255, 255, .8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+  body.tema-cerah .merek b { color: var(--tinta); } body.tema-cerah .nav-item { color: #334155; } body.tema-cerah .nav-item:hover { background: rgba(255, 255, 255, .6); color: var(--tinta); }
+  body.tema-cerah .nav-item.aktif { background: linear-gradient(90deg, rgba(14, 122, 85, .16), rgba(14, 122, 85, .04)); color: var(--zamrud-2); box-shadow: inset 0 0 0 1px rgba(14, 122, 85, .2); }
+  body.tema-cerah .nav-item.aktif .ik { color: var(--zamrud); } body.tema-cerah .kartu-staf { background: rgba(255, 255, 255, .6); border-color: #fff; }
+  body.tema-cerah .kartu-staf b { color: var(--tinta); } body.tema-cerah .kartu-staf .btn-ikon { color: #64748b; }
+}
+body.tema-cerah .nama-owner { background-image: linear-gradient(90deg, #a8832f, #475569 45%, #0e7a55 75%, #a8832f); }
+body:not(.tema-kaca) .tab[data-id="produk"]:not(.aktif):not(.memuat):not(.tengah) .tab-pil { color: #334155; background: linear-gradient(180deg, #fff, #e2e8f0); box-shadow: inset 0 0 0 1px #cbd5e1, inset 0 1px 0 #fff; }

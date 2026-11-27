@@ -1,6 +1,6 @@
 import { api } from '../api.js';
 import { sesi, aksi } from '../sesi.js';
-import { esc, ikon, rp, $, $$, toast, salah, lembar, sibuk, kosong, PERAN, HARI, hariIni, konfirmasi } from '../ui.js';
+import { esc, ikon, rp, $, $$, toast, salah, lembar, sibuk, kosong, PERAN, HARI, hariIni, konfirmasi, avatar, namaStaf } from '../ui.js';
 import { dataStaf, hapusCache } from '../data.js';
 
 const JENIS_BONUS = {
@@ -70,7 +70,7 @@ export default {
       if (tab === 'staf') {
         isi.innerHTML = `<div class="filter-bar"><span class="isi-kanan"></span><button class="btn utama" id="baru">${ikon('plus', 18)} Karyawan</button></div>
           <div class="grid-kartu">${staf.map((s, i) => `<button class="kartu-staf-besar muncul ${s.aktif ? '' : 'redup'}" style="--i:${i}" data-id="${s.id}">
-            <span class="avatar besar" style="--w:${esc(s.warna)}">${esc(s.nama[0])}</span><b>${esc(s.nama)}</b><small>${esc(s.kode)} · ${PERAN[s.peran]}</small>
+            ${avatar(s, 'besar')}${namaStaf(s)}<small>${esc(s.kode)} · ${PERAN[s.peran]}</small>
             <span class="pil ${s.aktif ? 'hijau' : 'merah'}">${s.aktif ? 'Aktif' : 'Nonaktif'}</span>${s.bebas_jadwal ? '<span class="pil abu">bebas jadwal</span>' : ''}</button>`).join('')}</div>`;
         $('#baru', isi).onclick = () => formStaf(null, tampil);
         $$('[data-id]', isi).forEach(b => b.onclick = () => formStaf(staf.find(s => s.id === b.dataset.id), tampil));

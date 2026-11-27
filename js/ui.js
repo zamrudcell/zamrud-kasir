@@ -170,3 +170,10 @@ export const STATUS_SERVIS = {
 };
 export const PERAN = { owner: 'Owner', kasir: 'Kasir', teknisi: 'Teknisi' };
 export const HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+
+// avatar: owner memakai logo permata dengan cincin emas-hijau-perak
+export function avatar(s, kelas = '') {
+  if (s && s.peran === 'owner') return `<span class="avatar avatar-owner ${kelas}"><img src="assets/gem.png" alt=""></span>`;
+  return `<span class="avatar ${kelas}" style="--w:${esc(s?.warna || '#10b981')}">${esc(((s && s.nama) || '?')[0])}</span>`;
+}
+export const namaStaf = (s) => s && s.peran === 'owner' ? `<b class="nama-owner">${esc(s.nama)}</b>` : `<b>${esc(s?.nama || '')}</b>`;
