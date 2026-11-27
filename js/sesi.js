@@ -3,7 +3,8 @@ import { api, setTokenStaf } from './api.js';
 
 const KUNCI = 'zk_staf';
 let staf = null;
-try { staf = JSON.parse(sessionStorage.getItem(KUNCI) || 'null'); } catch { staf = null; }
+// disimpan di perangkat (bukan hanya tab) agar tetap ada walau aplikasi ditutup HP; saat dibuka lagi cukup PIN
+try { staf = JSON.parse(localStorage.getItem(KUNCI) || sessionStorage.getItem(KUNCI) || 'null'); } catch { staf = null; }
 setTokenStaf(staf?.token);
 
 const pendengar = new Set();
@@ -15,7 +16,7 @@ export const sesi = {
 
   set(s) {
     staf = s; setTokenStaf(s?.token);
-    try { s ? sessionStorage.setItem(KUNCI, JSON.stringify(s)) : sessionStorage.removeItem(KUNCI); } catch {}
+    try { s ? localStorage.setItem(KUNCI, JSON.stringify(s)) : localStorage.removeItem(KUNCI); sessionStorage.removeItem(KUNCI); } catch {}
     pendengar.forEach(f => f(s));
   },
   saatBerubah(f) { pendengar.add(f); return () => pendengar.delete(f); },
@@ -63,12 +64,17 @@ export function mulaiPemantauKunci() {
   clearInterval(pemantau);
   pemantau = setInterval(() => {
     if (!staf || terkunci) return;
-    const menit = Number(sesi.pengaturan?.menit_kunci) || 2;
+    const menit = Number(sesi.pengaturan?.menit_kunci) || 10;
     if (Date.now() - terakhir > menit * 60000) saatTerkunci();
   }, 5000);
+  // jaga sesi di server tetap hidup selama aplikasi benar-benar dipakai (tiap 4 menit)
+  setInterval(() => {
+    if (staf && !terkunci && document.visibilityState === 'visible' && Date.now() - terakhir < 4 * 60000)
+      api.rpc('cek_sesi', { p_token: staf.token }).catch(() => {});
+  }, 4 * 60000);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && staf && !terkunci) {
-      const menit = Number(sesi.pengaturan?.menit_kunci) || 2;
+      const menit = Number(sesi.pengaturan?.menit_kunci) || 10;
       if (Date.now() - terakhir > menit * 60000) saatTerkunci();
     }
   });

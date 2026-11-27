@@ -207,6 +207,18 @@ function kunciLayar() {
   setTimeout(() => p.focus(), 100);
 }
 
+function layarPinKembali() {
+  const s = sesi.staf;
+  akar.innerHTML = '';
+  const p = papanPin({
+    judul: 'Selamat datang kembali', sub: `${s.nama} (${s.kode}) — masukkan PIN untuk melanjutkan`, kodeTetap: s.kode,
+    tombolBawah: `<button class="btn-teks ganti">${ikon('users', 16)} Ganti karyawan</button>`,
+    saatKirim: async (kode, pin) => { await sesi.masuk(kode, pin); p.remove(); bukaAplikasi(); },
+  });
+  akar.appendChild(p);
+  $('.ganti', p).onclick = async () => { await sesi.keluar(); layarPin('Silakan masuk dengan kode & PIN Anda'); };
+}
+
 // ======================= KERANGKA APLIKASI =======================
 function navItem(id) {
   const h = HALAMAN[id];
@@ -394,7 +406,7 @@ async function mulai() {
   if (!st.akun_sah) { await api.keluar(); return layarLogin('Akun ini tidak terdaftar sebagai akun toko Zamrud.'); }
   if (!st.ada_staf) return layarSetupOwner();
   if (!sesi.staf) return layarPin();
-  return bukaAplikasi();
+  return layarPinKembali(); // aplikasi dibuka lagi: cukup PIN, kode sudah terisi
 }
 
 aturSaatSesiHabis((pesan) => layarPin(pesan));
