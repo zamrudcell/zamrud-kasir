@@ -30,6 +30,6 @@ export const dataProduk = (semua = false) => ambilCache('produk' + (semua ? 'S' 
 // modal / harga beli — hanya owner (database menolak karyawan). Hasil: { id: nilai }
 export async function ambilModal(tabel, ids = null) {
   if (!sesi.owner || (ids && !ids.length)) return {};
-  const r = await aksi('data_modal', { p_tabel: tabel, p_ids: ids });
+  let r; try { r = await aksi('data_modal', { p_tabel: tabel, p_ids: ids }); } catch { return {}; } // SQL 003 belum dijalankan
   return Object.fromEntries((r || []).map(x => [x.id, Number(x.nilai) || 0]));
 }
