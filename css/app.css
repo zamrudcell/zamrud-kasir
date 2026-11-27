@@ -895,3 +895,33 @@ body.tema-cerah.zk-dorong-buka .utama { background: rgba(233, 239, 233, .96); }
 }
 body.tema-cerah .nama-owner { background-image: linear-gradient(90deg, #a8832f, #475569 45%, #0e7a55 75%, #a8832f); }
 body:not(.tema-kaca) .tab[data-id="produk"]:not(.aktif):not(.memuat):not(.tengah) .tab-pil { color: #334155; background: linear-gradient(180deg, #fff, #e2e8f0); box-shadow: inset 0 0 0 1px #cbd5e1, inset 0 1px 0 #fff; }
+
+/* =====================================================================
+   v1.5 — perpindahan halaman & menu dorong lebih mulus
+   ===================================================================== */
+@keyframes naik { from { opacity: 0; transform: translate3d(0, 8px, 0); } to { opacity: 1; transform: none; } }
+@keyframes zk-masuk { from { opacity: 0; } to { opacity: 1; } }
+.muncul { animation: naik .24s cubic-bezier(.22, 1, .36, 1) both; animation-delay: calc(min(var(--i, 0), 6) * 18ms); }
+.halaman.masuk > * { animation: none; }
+.halaman.masuk { animation: zk-masuk .18s ease-out both; }
+/* glow kaca lebih ringan (2 lapis bayangan, bukan 4) */
+body.tema-kaca :is(.stat, .kotak-status, .aksi, .kartu-produk),
+body.tema-kaca :is(.stat, .kotak-status, .aksi, .kartu-produk):hover { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 0 18px -8px var(--neon); }
+body.tema-kaca :is(.kartu, .ringkas-angka > div, .menu-ios, .kartu-staf-besar, .kasir-kanan, .tab-garis) { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 10px 24px -16px rgba(0, 0, 0, .7); }
+/* menu dorong: hanya transform yang dianimasikan */
+body .app, body.zk-dorong-buka .app { perspective: none; }
+.utama { transition: transform .5s cubic-bezier(.32, .72, 0, 1); border-radius: 0; }
+body.zk-dorong-buka { overflow: visible; }
+body.zk-dorong-siap { overflow: hidden; }
+body.zk-dorong-siap .utama { height: 100vh; height: 100dvh; overflow: hidden; border-radius: 28px; will-change: transform; transform: translate3d(0, 0, 0);
+  box-shadow: -30px 0 60px -20px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 255, 255, .1); }
+body.zk-dorong-buka .utama { transform: perspective(1100px) translate3d(64%, 0, 0) scale(.8) rotateY(-10deg); height: 100vh; height: 100dvh; }
+body.zk-dorong-siap .topbar { backdrop-filter: none; -webkit-backdrop-filter: none; }
+body.tema-kaca.zk-dorong-siap .topbar { background: rgba(10, 14, 26, .96); }
+body.tema-cerah.zk-dorong-siap .topbar { background: rgba(245, 248, 245, .97); }
+body.zk-dorong-siap .utama > * { pointer-events: none; }
+body.tema-kaca.zk-dorong-siap .utama { background: #0b1020; }
+body.tema-mewah.zk-dorong-siap .utama { background: #0f0d09; }
+body.tema-cerah.zk-dorong-siap .utama { background: #eef2ee; }
+.tabbar { transition: transform .4s cubic-bezier(.32, .72, 0, 1); }
+@media (min-width: 900px) { body.zk-dorong-siap .utama { height: auto; overflow: visible; border-radius: 0; box-shadow: none; transform: none; } }

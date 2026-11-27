@@ -324,16 +324,18 @@ async function tampilkan() {
   const wadah = $('#halaman');
   if (!wadah) return;
   try { halamanAktif?.lepas?.(); } catch {}
-  wadah.classList.remove('masuk'); void wadah.offsetWidth;
-  wadah.innerHTML = '<div class="memuat"><span></span><span></span><span></span></div>';
   try {
-    const m = await h.muat();
+    const m = await h.muat(); // sudah disiapkan sejak login, jadi instan
     if (giliran !== giliranTampil) return;
+    window.__gulirProgram = performance.now();
+    window.scrollTo(0, 0);
+    const ut = $('.utama'); if (ut) ut.scrollTop = 0;
+    wadah.classList.remove('masuk');
     wadah.innerHTML = '';
+    void wadah.offsetWidth;
     wadah.classList.add('masuk');
     halamanAktif = m.default;
     await m.default.tampil(wadah, { params: new URLSearchParams(location.hash.split('?')[1] || ''), segarkanNotif: muatNotifikasi });
-    window.scrollTo({ top: 0 });
     $$('.tab.memuat').forEach(t => t.classList.remove('memuat'));
     const ta = $(`.tab[data-id="${id}"]`);
     if (ta) { ta.classList.remove('sukses'); void ta.offsetWidth; ta.classList.add('sukses'); setTimeout(() => ta.classList.remove('sukses'), 900); }

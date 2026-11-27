@@ -75,7 +75,7 @@ export function tombolMusik() {
 
 // ---------------- 1. Jeli memantul saat kotak disentuh ----------------
 const JELI_KARTU = '.stat, .kotak-status, .kartu-produk, .aksi, .kartu-staf-besar, .kartu-profil';
-const JELI_BARIS = '.menu-baris, .baris-servis, .baris-daftar, .baris-promo, .nav-item, .tab:not(.tengah)';
+const JELI_BARIS = '.menu-baris, .baris-servis, .baris-daftar, .baris-promo';
 function goyang(el, halus) {
   el.classList.remove('muncul', 'zk-jeli', 'zk-jeli-halus'); void el.offsetWidth;
   el.classList.add(halus ? 'zk-jeli-halus' : 'zk-jeli');
@@ -128,7 +128,7 @@ document.addEventListener('pointerdown', (e) => {
 let yAkhir = scrollY, laju = 0, arah = 1, v = 0, putar = false, bunyiGulir = 0;
 function bingkaiGulir() {
   const el = document.getElementById('halaman');
-  v += (Math.min(laju, 60) * 0.05 - v) * .25;
+  v += (Math.min(laju, 60) * 0.03 - v) * .25;
   laju *= .75;
   if (el) {
     el.style.filter = v > .2 ? `blur(${v.toFixed(2)}px)` : '';
@@ -137,7 +137,12 @@ function bingkaiGulir() {
   if (v > .05 || laju > .5) requestAnimationFrame(bingkaiGulir);
   else { putar = false; if (el) { el.style.filter = ''; el.style.transform = ''; } }
 }
+let jariAktif = 0;
+addEventListener('touchmove', () => { jariAktif = performance.now(); }, { passive: true });
+addEventListener('wheel', () => { jariAktif = performance.now(); }, { passive: true });
 addEventListener('scroll', () => {
+  const kini = performance.now();
+  if (kini - (window.__gulirProgram || 0) < 700 || kini - jariAktif > 1200) { yAkhir = scrollY; return; }
   if (!geraknya() || document.body.classList.contains('ada-lembar') || document.body.classList.contains('zk-dorong-buka') || document.body.dataset.halaman === 'kasir') { yAkhir = scrollY; return; }
   const selisih = scrollY - yAkhir; yAkhir = scrollY;
   arah = Math.sign(selisih) || arah; laju = Math.abs(selisih);
@@ -146,21 +151,50 @@ addEventListener('scroll', () => {
 }, { passive: true });
 
 // ---------------- 5. Menu "dorong mundur" ----------------
+let simpanY = 0, timerDorong = null;
 export function menuDorong({ isiHTML, saatTutup }) {
   let el = document.querySelector('.zk-menu-dorong');
   if (!el) { el = document.createElement('nav'); el.className = 'zk-menu-dorong'; document.body.appendChild(el); }
-  const buka = document.body.classList.contains('zk-dorong-buka');
-  const tutup = () => { document.body.classList.remove('zk-dorong-buka'); sfx('tick'); saatTutup?.(); };
-  if (buka) return tutup();
+  const b = document.body;
+  const tutup = () => {
+    if (!b.classList.contains('zk-dorong-buka')) return;
+    b.classList.remove('zk-dorong-buka'); sfx('tick'); saatTutup?.();
+    clearTimeout(timerDorong);
+    timerDorong = setTimeout(() => {           // setelah animasi selesai baru kembalikan posisi gulir
+      const u = document.querySelector('.utama'), y = u ? u.scrollTop : simpanY;
+      b.classList.remove('zk-dorong-siap');
+      window.__gulirProgram = performance.now(); window.scrollTo(0, y);
+    }, 520);
+  };
+  if (b.classList.contains('zk-dorong-buka')) return tutup();
+  clearTimeout(timerDorong);
   el.innerHTML = isiHTML;
-  document.body.classList.add('zk-dorong-buka');
-  sfx('pop');
-  [...el.querySelectorAll('.zd-item, .zd-profil, .zd-bawah')].forEach((b, k) => b.animate(
-    [{ transform: 'translateX(-24px)', opacity: 0 }, { transform: 'none', opacity: 1 }],
-    { duration: 380, delay: 120 + Math.min(k, 14) * 35, fill: 'backwards', easing: 'cubic-bezier(.23,1,.32,1)' }));
-  el.onclick = (e) => { if (e.target.closest('a, button')) setTimeout(tutup, 10); };
+  if (!b.classList.contains('zk-dorong-siap')) {
+    simpanY = scrollY;
+    window.__gulirProgram = performance.now();
+    b.classList.add('zk-dorong-siap');           // layar dikunci seukuran HP dulu (tanpa animasi)
+    const u = document.querySelector('.utama'); if (u) u.scrollTop = simpanY;
+  }
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    b.classList.add('zk-dorong-buka'); sfx('pop');
+    [...el.querySelectorAll('.zd-item, .zd-profil, .zd-bawah')].forEach((x, k) => x.animate(
+      [{ transform: 'translateX(-18px)', opacity: 0 }, { transform: 'none', opacity: 1 }],
+      { duration: 300, delay: 90 + Math.min(k, 12) * 22, fill: 'backwards', easing: 'cubic-bezier(.23,1,.32,1)' }));
+  }));
+  el.onclick = (e) => {
+    const a = e.target.closest('a[href^="#/"]');
+    if (a) {                                   // buka halaman dulu di belakang, lalu tutup menu dengan mulus
+      e.preventDefault();
+      const ke = a.getAttribute('href');
+      el.querySelectorAll('.zd-item').forEach(x => x.classList.toggle('on', x === a));
+      if (ke !== location.hash) location.hash = ke;
+      setTimeout(tutup, 200);
+      return;
+    }
+    if (e.target.closest('button')) setTimeout(tutup, 10);
+  };
   const utama = document.querySelector('.utama');
-  if (utama) utama.addEventListener('click', function sekali(ev) { if (document.body.classList.contains('zk-dorong-buka')) { ev.preventDefault(); ev.stopPropagation(); tutup(); } }, { capture: true, once: true });
+  if (utama) utama.addEventListener('click', function sekali(ev) { if (b.classList.contains('zk-dorong-buka')) { ev.preventDefault(); ev.stopPropagation(); tutup(); } }, { capture: true, once: true });
   return tutup;
 }
 
