@@ -327,9 +327,7 @@ async function tampilkan() {
   try {
     document.body.classList.add('zk-pindah');
     clearTimeout(window.__pindahT);
-    const adaIsi = wadah.childElementCount > 0 && !matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (adaIsi) { wadah.classList.remove('masuk'); wadah.classList.add('keluar'); }
-    const [m] = await Promise.all([h.muat(), adaIsi ? new Promise(r => setTimeout(r, 120)) : null]); // halaman lama mengecil & memudar
+    const m = await h.muat(); // sudah disiapkan sejak login, jadi instan
     if (giliran !== giliranTampil) return;
     window.__gulirProgram = performance.now();
     window.scrollTo(0, 0);
@@ -339,9 +337,10 @@ async function tampilkan() {
     halamanAktif = m.default;
     // bagian awal halaman (kerangka) langsung tergambar, baru animasi zoom-blur dijalankan
     const proses = m.default.tampil(wadah, { params: new URLSearchParams(location.hash.split('?')[1] || ''), segarkanNotif: muatNotifikasi });
+    [...wadah.children].forEach((c, i) => c.style.setProperty('--u', Math.min(i, 8))); // isi muncul satu per satu
     void wadah.offsetWidth;
     wadah.classList.add('masuk');
-    window.__pindahT = setTimeout(() => { document.body.classList.remove('zk-pindah'); }, 340);
+    window.__pindahT = setTimeout(() => { document.body.classList.remove('zk-pindah'); }, 650);
     await proses;
     $$('.tab.memuat').forEach(t => t.classList.remove('memuat'));
     const ta = $(`.tab[data-id="${id}"]`);

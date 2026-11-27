@@ -981,20 +981,18 @@ body.tema-mewah .pilih-font button.aktif { border-color: #f6d27a; box-shadow: 0 
   .tombol-pin button { width: 62px; height: 62px; font-size: 1.4rem; }
 }
 
-/* perpindahan halaman: zoom blur ringan (satu lapisan, GPU) */
-@keyframes zk-zoom-masuk { from { opacity: 0; transform: scale(1.04); filter: blur(7px); } 60% { filter: blur(0); } to { opacity: 1; transform: none; filter: none; } }
-@keyframes zk-zoom-keluar { to { opacity: 0; transform: scale(.975); filter: blur(4px); } }
-.halaman.masuk { animation: zk-zoom-masuk .3s cubic-bezier(.22, 1, .36, 1) both; transform-origin: 50% 0; }
-body.zk-pindah .halaman { will-change: transform, opacity, filter; }
-.halaman.keluar { animation: zk-zoom-keluar .12s ease-in both; transform-origin: 50% 0; pointer-events: none; }
-.halaman.masuk .muncul, .halaman.keluar .muncul { animation: none; }
+/* perpindahan halaman: isi muncul satu per satu dengan sedikit memantul (hanya transform & opacity) */
+@keyframes zk-pantul { 0% { opacity: 0; transform: translate3d(0, 16px, 0) scale(.97); } 55% { opacity: 1; transform: translate3d(0, -4px, 0) scale(1.006); } 80% { transform: translate3d(0, 1px, 0); } 100% { opacity: 1; transform: none; } }
+.halaman.masuk { animation: none; }
+.halaman.masuk .muncul { animation: zk-pantul .45s cubic-bezier(.25, .8, .35, 1) both; animation-delay: calc(min(var(--i, 0), 6) * 40ms); }
+.halaman.masuk > :is(*, .muncul) { animation: zk-pantul .45s cubic-bezier(.25, .8, .35, 1) both; animation-delay: calc(var(--u, 0) * 55ms); }
 /* selama berpindah, matikan efek mahal (blur kaca & cahaya) */
 body.zk-pindah :is(.topbar, .sidebar, .tabbar) { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 body.zk-pindah.tema-kaca .topbar { background: rgba(10, 14, 26, .96); }
 body.zk-pindah.tema-cerah .topbar { background: rgba(245, 248, 245, .97); }
 body.zk-pindah .halaman * { transition: none !important; }
 body.zk-pindah.tema-kaca .grafik .batang { filter: none; }
-@media (prefers-reduced-motion: reduce) { .halaman.masuk, .halaman.keluar { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .halaman.masuk > *, .halaman.masuk .muncul { animation: none; } }
 
 /* grafik arus uang & barang */
 .arus-fig { position: relative; height: 230px; margin-top: 6px; }
