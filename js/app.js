@@ -393,7 +393,7 @@ async function bukaAplikasi() {
 }
 
 // ======================= MULAI =======================
-async function mulai() {
+async function mulai(dariAwal = false) {
   if (!api.sudahMasuk) return layarLogin();
   let st;
   try {
@@ -406,15 +406,18 @@ async function mulai() {
   if (!st.akun_sah) { await api.keluar(); return layarLogin('Akun ini tidak terdaftar sebagai akun toko Zamrud.'); }
   if (!st.ada_staf) return layarSetupOwner();
   if (!sesi.staf) return layarPin();
-  return layarPinKembali(); // aplikasi dibuka lagi: cukup PIN, kode sudah terisi
+  return dariAwal ? layarPinKembali() : bukaAplikasi(); // aplikasi dibuka lagi: cukup PIN, kode sudah terisi
 }
 
-aturSaatSesiHabis((pesan) => layarPin(pesan));
-aturSaatTerkunci(kunciLayar);
-mulaiPemantauKunci();
-
-if ('serviceWorker' in navigator && location.protocol === 'https:') {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+// menu.js ikut mengimpor file ini (tanpa ?v=) sehingga bisa termuat dua kali:
+// pastikan aplikasi hanya dijalankan SEKALI
+if (!window.__zkJalan) {
+  window.__zkJalan = true;
+  aturSaatSesiHabis((pesan) => layarPin(pesan));
+  aturSaatTerkunci(kunciLayar);
+  mulaiPemantauKunci();
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+  pembuka().then(() => mulai(true));
 }
-
-pembuka().then(mulai);

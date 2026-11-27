@@ -21,8 +21,20 @@ function formStaf(s, saatSimpan) {
       <label class="cek s2"><input type="checkbox" name="bebas_jadwal" ${s.bebas_jadwal ? 'checked' : ''}> Boleh login kapan saja (tanpa jadwal shift)</label>
       <p class="redup kecil s2">Kasir: berjualan & servis. Teknisi: mengerjakan servis (bonus servis). Owner: semua akses.</p>
       <button class="btn utama besar s2" type="submit">${ikon('check', 18)} Simpan</button>
+      ${!baru && s.id !== sesi.staf.id ? `<button class="btn merah-garis besar s2" type="button" id="hapus-staf">${ikon('trash', 18)} Hapus karyawan</button>
+      <p class="redup kecil s2">Belum pernah bertransaksi → terhapus permanen. Sudah punya riwayat → dinonaktifkan & diarsipkan, nota lamanya tetap aman.</p>` : ''}
     </form>` });
   const f = $('#fs', l.el);
+  const bh = $('#hapus-staf', l.el);
+  if (bh) bh.onclick = async () => {
+    if (!await konfirmasi(`Hapus ${s.nama} (${s.kode})? Ia tidak bisa masuk lagi.`, { ya: 'Hapus', bahaya: true, judul: 'Hapus karyawan' })) return;
+    sibuk(bh, async () => {
+      try {
+        const r = await aksi('hapus_staf', { p_id: s.id });
+        hapusCache('staf'); toast(r === 'dihapus' ? 'Karyawan dihapus permanen' : 'Karyawan diarsipkan (riwayatnya tetap tersimpan)'); l.tutup(); saatSimpan();
+      } catch (er) { salah(er); }
+    });
+  };
   f.onsubmit = (e) => {
     e.preventDefault();
     sibuk($('[type=submit]', f), async () => {
@@ -66,7 +78,7 @@ export default {
       $$('#tab button', el).forEach(b => b.classList.toggle('aktif', b.dataset.t === tab));
       isi.innerHTML = '<div class="memuat"><span></span><span></span><span></span></div>';
       hapusCache('staf');
-      const staf = await dataStaf();
+      const staf = (await dataStaf()).filter(x => !x.diarsip); // yang diarsip tidak tampil
       if (tab === 'staf') {
         isi.innerHTML = `<div class="filter-bar"><span class="isi-kanan"></span><button class="btn utama" id="baru">${ikon('plus', 18)} Karyawan</button></div>
           <div class="grid-kartu">${staf.map((s, i) => `<button class="kartu-staf-besar muncul ${s.aktif ? '' : 'redup'}" style="--i:${i}" data-id="${s.id}">
