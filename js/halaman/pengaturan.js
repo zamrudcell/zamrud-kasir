@@ -4,6 +4,7 @@ import { esc, ikon, tgl, $, $$, toast, salah, sibuk, konfirmasi } from '../ui.js
 import { petaStaf } from '../data.js';
 import { ukuranNota, setUkuranNota } from '../nota.js';
 import { VERSI } from '../config.js';
+import { tema, setTema, suaraNyala, setSuara } from '../efek.js';
 
 const AKSI = {
   masuk: 'masuk shift', keluar: 'akhiri shift', pin_salah: 'PIN salah', masuk_ditolak_diluar_shift: 'mencoba masuk di luar shift',
@@ -31,6 +32,10 @@ export default {
           <label class="lbl">Kunci layar otomatis (menit)<input class="input" name="menit_kunci" inputmode="numeric" value="${p.menit_kunci ?? 2}"></label>
           <button class="btn utama s2" type="submit">${ikon('check', 18)} Simpan pengaturan</button>
         </form></section>` : ''}
+      <section class="kartu muncul"><div class="kartu-kepala"><h3>${ikon('star', 18)} Tampilan & suara (perangkat ini)</h3></div>
+        <div class="segmen" id="tema">${[['kaca', 'Kaca Mewah'], ['terang', 'Terang']].map(([v, t]) => `<button data-v="${v}" class="${tema() === v ? 'aktif' : ''}">${t}</button>`).join('')}</div>
+        <label class="cek" style="margin-left:14px"><input type="checkbox" id="suara" ${suaraNyala() ? 'checked' : ''}> Suara efek (boing, cairan, saklar)</label>
+      </section>
       <div class="dua-kolom">
         <section class="kartu muncul d1"><div class="kartu-kepala"><h3>${ikon('print', 18)} Ukuran nota (perangkat ini)</h3></div>
           <div class="segmen" id="nota">${[['58', 'Thermal 58mm'], ['80', 'Thermal 80mm'], ['A4', 'Kertas A4']].map(([v, t]) => `<button data-v="${v}" class="${ukuranNota() === v ? 'aktif' : ''}">${t}</button>`).join('')}</div>
@@ -50,6 +55,8 @@ export default {
     if (ft) ft.onsubmit = (e) => { e.preventDefault(); sibuk($('[type=submit]', ft), async () => {
       try { const d = Object.fromEntries(new FormData(ft)); await aksi('simpan_pengaturan', { p_data: d }); sesi.pengaturan = await api.satu('pengaturan'); toast('Pengaturan disimpan'); } catch (er) { salah(er); }
     }); };
+    $$('#tema button', el).forEach(b => b.onclick = () => { setTema(b.dataset.v); $$('#tema button', el).forEach(x => x.classList.toggle('aktif', x === b)); });
+    $('#suara', el).onchange = (e) => setSuara(e.target.checked);
     $$('#nota button', el).forEach(b => b.onclick = () => { setUkuranNota(b.dataset.v); $$('#nota button', el).forEach(x => x.classList.toggle('aktif', x === b)); toast('Ukuran nota: ' + b.textContent); });
     $('#fpin', el).onsubmit = (e) => { e.preventDefault(); const f = e.target;
       if (f.baru.value !== f.ulang.value) return toast('PIN baru tidak sama', 'err');

@@ -3,6 +3,9 @@ import { api } from './api.js';
 import { sesi, aksi, aturSaatSesiHabis, aturSaatTerkunci, mulaiPemantauKunci, setTerkunci } from './sesi.js';
 import { esc, ikon, $, $$, toast, salah, sibuk, lembar, PERAN, konfirmasi } from './ui.js';
 import { VERSI } from './config.js';
+import { terapkanTema, saklarLogo } from './efek.js';
+
+terapkanTema();
 
 const HALAMAN = {
   beranda:   { judul: 'Beranda', ik: 'home', grup: 'UTAMA', muat: () => import('./halaman/beranda.js') },
@@ -71,21 +74,27 @@ function layarLogin(pesan = '') {
         <label class="lbl">Sandi</label>
         <div class="input-sandi"><input class="input" name="sandi" type="password" autocomplete="current-password" required placeholder="••••••••">
           <button type="button" class="btn-ikon lihat" aria-label="Lihat sandi">${ikon('search', 18)}</button></div>
-        <button class="btn utama besar penuh" type="submit">Masuk</button>
+        <button type="submit" hidden></button>
+        <div id="tempat-saklar"></div>
       </form>
       <p class="versi">Zamrud Cell · v${VERSI}</p>
     </div></div>`;
   $('.lihat').onclick = () => { const i = $('[name=sandi]'); i.type = i.type === 'password' ? 'text' : 'password'; };
-  $('#f-login').onsubmit = async (e) => {
-    e.preventDefault();
-    const f = e.target, btn = $('button[type=submit]', f);
-    await sibuk(btn, async () => {
-      try {
-        await api.masuk(f.email.value.trim(), f.sandi.value);
-        await mulai();
-      } catch (er) { salah(er); }
-    });
-  };
+  const f = $('#f-login');
+  let proses = false;
+  const saklar = saklarLogo({ label: 'Ketuk untuk masuk', saatTekan: () => kirim() });
+  $('#tempat-saklar').appendChild(saklar.el);
+  async function kirim() {
+    if (proses) return;
+    if (!f.reportValidity()) return;
+    proses = true; saklar.nyalakan();
+    try {
+      await Promise.all([api.masuk(f.email.value.trim(), f.sandi.value), saklar.selesai()]);
+      await mulai();
+    } catch (er) { saklar.matikan(); salah(er); }
+    finally { proses = false; }
+  }
+  f.onsubmit = (e) => { e.preventDefault(); kirim(); };
 }
 
 // ======================= SETUP PERTAMA =======================
