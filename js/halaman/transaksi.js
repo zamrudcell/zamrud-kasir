@@ -1,11 +1,12 @@
 import { api } from '../api.js';
 import { sesi, aksi } from '../sesi.js';
 import { esc, ikon, rp, tgl, $, $$, toast, salah, lembar, sibuk, kosong, hariIni, geserHari, awalHari, akhirHari, konfirmasi, tanya } from '../ui.js';
-import { petaStaf } from '../data.js';
+import { petaStaf, ambilModal } from '../data.js';
 import { notaTransaksi, cetak } from '../nota.js';
 
 export async function bukaTransaksi(id, saatBerubah = () => {}) {
   const [t] = await api.ambil('transaksi', { eq: { id } });
+  if (t && sesi.owner) t.modal = (await ambilModal('transaksi', [id]))[id] ?? 0;
   if (!t) return toast('Transaksi tidak ditemukan', 'err');
   const [items, staf, retur] = await Promise.all([
     api.ambil('transaksi_item', { eq: { transaksi_id: id }, order: 'gratis.asc' }),
@@ -107,6 +108,7 @@ export default {
         eq: { staf_id: staf || undefined }, gte: { dibuat: awalHari(dari) }, lte: { dibuat: akhirHari(sampai) },
         ilike: q ? { nomor: '*' + q + '*' } : undefined, order: 'dibuat.desc', limit: 500,
       });
+      if (sesi.owner) { const md = await ambilModal('transaksi', data.map(t => t.id)); data.forEach(t => { t.modal = md[t.id] ?? 0; }); }
       const ok = data.filter(t => t.status === 'selesai');
       $('#ringkas', el).innerHTML = `
         <div><small>Transaksi</small><b>${ok.length}</b></div>

@@ -28,6 +28,7 @@ function formProduk(p, kategori, saatSimpan) {
       <label class="lbl">Harga beli (modal)<input class="input" name="harga_beli" inputmode="numeric" required value="${p.harga_beli ?? ''}"></label>
       <label class="lbl">Harga jual<input class="input" name="harga_jual" inputmode="numeric" required value="${p.harga_jual ?? ''}"></label>
       ${baru ? '<label class="lbl">Stok awal<input class="input" name="stok" inputmode="numeric" value="0"></label>' : ''}
+      ${baru && !sesi.owner ? '<p class="redup kecil s2">Setelah disimpan, harga hanya bisa diubah owner. Penambahan produk tercatat di log aktivitas.</p>' : ''}
       <label class="lbl">Stok minimum<input class="input" name="stok_minimum" inputmode="numeric" placeholder="default ${sesi.pengaturan?.stok_minimum_default ?? 3}" value="${p.stok_minimum ?? ''}"></label>
       <label class="lbl">Garansi (hari)<input class="input" name="garansi_hari" inputmode="numeric" placeholder="default ${sesi.pengaturan?.garansi_jual_hari ?? 7}" value="${p.garansi_hari ?? ''}"></label>
       <label class="cek s2"><input type="checkbox" name="aktif" ${p.aktif ? 'checked' : ''}> Produk aktif (tampil di kasir)</label>
@@ -72,7 +73,7 @@ async function detailProduk(p, kategori, saatBerubah) {
       </div>
       <div class="baris-tombol bungkus">
         <button class="btn abu" data-label>${ikon('barcode', 18)} Cetak label</button>
-        ${sesi.owner ? `<button class="btn abu" data-masuk>${ikon('plus', 18)} Stok masuk</button><button class="btn utama" data-ubah>${ikon('edit', 18)} Ubah</button>` : ''}
+        <button class="btn abu" data-masuk>${ikon('plus', 18)} Stok masuk</button>${sesi.owner ? `<button class="btn utama" data-ubah>${ikon('edit', 18)} Ubah</button>` : ''}
       </div>
       <h4 class="sub-judul">${ikon('history', 16)} Riwayat stok</h4>
       <div class="daftar-ringkas">${mutasi.map(m => `<div class="baris-ringkas"><span>${esc(m.jenis)} <small>${esc(m.ref || '')} · ${tgl(m.dibuat)}</small></span><b class="${m.qty < 0 ? 'merah' : 'hijau'}">${m.qty > 0 ? '+' : ''}${m.qty} → ${m.stok_akhir}</b></div>`).join('') || '<p class="redup">Belum ada mutasi</p>'}</div>
@@ -87,12 +88,12 @@ async function detailProduk(p, kategori, saatBerubah) {
     l.tutup();
     const m = lembar({ judul: 'Stok masuk — ' + p.nama, lebar: 420, isi: `
       <label class="lbl">Jumlah masuk</label><input class="input besar" id="qty" inputmode="numeric" placeholder="0">
-      <label class="lbl">Harga beli baru (opsional)</label><input class="input" id="hb" inputmode="numeric" placeholder="${p.harga_beli}">
+      ${sesi.owner ? `<label class="lbl">Harga beli baru (opsional)</label><input class="input" id="hb" inputmode="numeric" placeholder="${p.harga_beli ?? ''}">` : '<p class="redup kecil">Harga beli hanya bisa diubah owner. Stok masuk tercatat atas nama Anda.</p>'}
       <label class="lbl">Keterangan</label><input class="input" id="ket" placeholder="mis. beli dari supplier X">
       <button class="btn utama besar penuh" id="ok">${ikon('check', 18)} Simpan</button>` });
     $('#ok', m.el).onclick = (e) => sibuk(e.currentTarget, async () => {
       try {
-        await aksi('stok_masuk', { p_produk: p.id, p_qty: Number($('#qty', m.el).value), p_harga_beli: Number($('#hb', m.el).value) || null, p_ket: $('#ket', m.el).value || 'barang masuk' });
+        await aksi('stok_masuk', { p_produk: p.id, p_qty: Number($('#qty', m.el).value), p_harga_beli: Number($('#hb', m.el)?.value) || null, p_ket: $('#ket', m.el).value || 'barang masuk' });
         hapusCache('produk'); hapusCache('produkS'); toast('Stok ditambahkan'); m.tutup(); saatBerubah();
       } catch (er) { salah(er); }
     });
@@ -111,7 +112,7 @@ export default {
         ${sesi.owner ? '<label class="cek"><input type="checkbox" id="nonaktif"> Tampilkan nonaktif</label>' : ''}
         <span class="isi-kanan"></span>
         <button class="btn abu" id="label">${ikon('barcode', 18)} Label</button>
-        ${sesi.owner ? `<button class="btn abu" id="b-kat">${ikon('tag', 18)} Kategori</button><button class="btn utama" id="baru">${ikon('plus', 18)} Produk</button>` : ''}
+        ${sesi.owner ? `<button class="btn abu" id="b-kat">${ikon('tag', 18)} Kategori</button>` : ''}<button class="btn utama" id="baru">${ikon('plus', 18)} Produk</button>
       </div>
       <div class="ringkas-angka" id="ringkas"></div>
       <div class="kartu tabel-wadah"><table class="tabel" id="tabel"><thead><tr>

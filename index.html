@@ -15,26 +15,29 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <script>
-    // pasangan font (judul + angka/kode) dimuat sedini mungkin agar tidak berkedip
+    // 4 gaya huruf: [nama, font judul, font angka/kode, url Google Fonts, gaya judul, tebal judul, tebal angka, skala judul]
     window.ZK_FONT = {
-      grotesk: ['Space Grotesk', 'JetBrains Mono', 'Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700'],
-      sora: ['Sora', 'IBM Plex Mono', 'Sora:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600'],
-      outfit: ['Outfit', 'Fira Code', 'Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600'],
-      jakarta: ['Plus Jakarta Sans', 'Space Mono', 'Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700'],
+      tegas:   ['Tegas Miring', 'Exo 2', 'Chakra Petch', 'Exo+2:ital,wght@1,700;1,800;1,900&family=Chakra+Petch:wght@500;600;700', 'italic', 800, 600, 1],
+      kontras: ['Tebal & Tipis', 'Unbounded', 'Azeret Mono', 'Unbounded:wght@700;800;900&family=Azeret+Mono:wght@200;300;400', 'normal', 900, 300, .92],
+      tangan:  ['Tulisan Tangan', 'Caveat', 'Kode Mono', 'Caveat:wght@600;700&family=Kode+Mono:wght@400;500;600', 'normal', 700, 500, 1.28],
+      futur:   ['Futuristik', 'Orbitron', 'Share Tech Mono', 'Orbitron:wght@600;700;800&family=Share+Tech+Mono', 'normal', 700, 400, .9],
     };
-    (function () {
-      var k = 'grotesk'; try { k = localStorage.getItem('zk_font') || k; } catch (e) {}
-      var f = ZK_FONT[k] || ZK_FONT.grotesk;
-      document.write('<link id="zk-font" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=' + f[2] + '&display=swap">');
+    window.ZK_PAKAI_FONT = function (k) {
+      var f = ZK_FONT[k] || ZK_FONT.tegas, l = document.getElementById('zk-font');
+      var url = 'https://fonts.googleapis.com/css2?family=' + f[3] + '&display=swap';
+      if (!l) { l = document.createElement('link'); l.id = 'zk-font'; l.rel = 'stylesheet'; document.head.appendChild(l); }
+      if (l.href !== url) l.href = url;
       var r = document.documentElement.style;
-      r.setProperty('--font-judul', '"' + f[0] + '"'); r.setProperty('--font-kode', '"' + f[1] + '"');
-    })();
+      r.setProperty('--font-judul', '"' + f[1] + '"'); r.setProperty('--font-kode', '"' + f[2] + '"');
+      r.setProperty('--gaya-judul', f[4]); r.setProperty('--tebal-judul', f[5]); r.setProperty('--tebal-kode', f[6]); r.setProperty('--skala-judul', f[7]);
+    };
+    (function () { var k = 'tegas'; try { k = localStorage.getItem('zk_font') || k; } catch (e) {} ZK_PAKAI_FONT(ZK_FONT[k] ? k : 'tegas'); })();
   </script>
-  <link rel="stylesheet" href="css/app.css?v=9">
+  <link rel="stylesheet" href="css/app.css?v=10">
 </head>
 <body>
   <div id="akar"></div>
   <noscript>Aktifkan JavaScript untuk memakai ZAMRUD KASIR.</noscript>
-  <script type="module" src="js/app.js?v=9"></script>
+  <script type="module" src="js/app.js?v=10"></script>
 </body>
 </html>

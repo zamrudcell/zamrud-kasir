@@ -1,7 +1,7 @@
 import { api } from '../api.js';
 import { sesi, aksi } from '../sesi.js';
 import { esc, ikon, rp, tgl, $, $$, toast, salah, lembar, sibuk, kosong, konfirmasi, angka, hitungNaik } from '../ui.js';
-import { dataKategori, petaStaf, hapusCache } from '../data.js';
+import { dataKategori, petaStaf, hapusCache, ambilModal } from '../data.js';
 import { bukaPindai } from './kasir.js';
 
 export default {
@@ -18,13 +18,14 @@ export default {
       $$('[data-id]', l.el).forEach(b => b.onclick = async () => {
         const o = r.find(x => x.id === b.dataset.id);
         const it = await api.ambil('opname_item', { eq: { opname_id: o.id }, order: 'produk_id.asc', semua: true });
+        const md = await ambilModal('opname_item', [o.id]).catch(() => ({})); it.forEach(i => { i.harga_beli = md[i.produk_id] || 0; });
         const prod = await api.ambil('produk', { select: 'id,nama,kode', order: 'id.asc', semua: true });
         const pm = Object.fromEntries(prod.map(p => [p.id, p]));
         const beda = it.filter(i => i.stok_fisik !== null && i.stok_fisik !== i.stok_sistem);
         lembar({ judul: o.keterangan || 'Opname', lebar: 560, isi: `
           <div class="ringkas-angka"><div><small>Terisi</small><b>${it.filter(i => i.stok_fisik !== null).length}/${it.length}</b></div>
           <div><small>Selisih</small><b>${beda.length} produk</b></div>
-          <div><small>Nilai selisih</small><b>${rp(beda.reduce((a, i) => a + (i.stok_fisik - i.stok_sistem) * i.harga_beli, 0))}</b></div></div>
+          ${sesi.owner ? `<div><small>Nilai selisih</small><b>${rp(beda.reduce((a, i) => a + (i.stok_fisik - i.stok_sistem) * i.harga_beli, 0))}</b></div>` : ''}</div>
           <div class="daftar-ringkas">${beda.map(i => `<div class="baris-ringkas"><span>${esc(pm[i.produk_id]?.nama || '-')}<small class="blok">sistem ${i.stok_sistem} → fisik ${i.stok_fisik}</small></span><b class="${i.stok_fisik > i.stok_sistem ? 'hijau' : 'merah'}">${i.stok_fisik > i.stok_sistem ? '+' : ''}${i.stok_fisik - i.stok_sistem}</b></div>`).join('') || '<p class="redup">Tidak ada selisih — stok cocok semua 👍</p>'}</div>` });
       });
     };
@@ -47,6 +48,7 @@ export default {
     }
 
     let item = await api.ambil('opname_item', { eq: { opname_id: opname.id }, order: 'produk_id.asc', semua: true });
+    const modalOp = await ambilModal('opname_item', [opname.id]).catch(() => ({})); item.forEach(i => { i.harga_beli = modalOp[i.produk_id] || 0; });
     const produk = await api.ambil('produk', { select: 'id,nama,kode,barcode,kategori_id', order: 'id.asc', semua: true });
     const pm = Object.fromEntries(produk.map(p => [p.id, p]));
     item.sort((a, b) => (pm[a.produk_id]?.nama || '').localeCompare(pm[b.produk_id]?.nama || ''));
@@ -59,8 +61,8 @@ export default {
         <div class="ro-grid">
           <div class="ro-kotak"><b class="hijau" id="n-lebih">0</b><small>Lebih</small></div>
           <div class="ro-kotak"><b class="merah" id="n-kurang">0</b><small>Kurang</small></div>
-          <div class="ro-kotak lebar"><b class="emas" id="n-aset">Rp 0</b><small>Nilai Aset</small></div>
-          <div class="ro-kotak"><b class="ungu" id="n-selisih">Rp 0</b><small>Nilai Selisih (±)</small></div>
+          ${sesi.owner ? `<div class="ro-kotak lebar"><b class="emas" id="n-aset">Rp 0</b><small>Nilai Aset</small></div>
+          <div class="ro-kotak"><b class="ungu" id="n-selisih">Rp 0</b><small>Nilai Selisih (±)</small></div>` : ''}
         </div>
       </section>
       <section class="kartu muncul d2">
@@ -77,7 +79,7 @@ export default {
           <button class="btn-ikon besar" id="scan">${ikon('scan', 20)}</button>
           <label class="cek"><input type="checkbox" id="belum"> Belum diisi</label>
         </div>
-        <div class="tabel-wadah"><table class="tabel" id="tabel"><thead><tr><th>Produk</th><th>Kategori</th><th class="kanan">Harga beli</th><th class="kanan">Stok sistem</th><th class="tengah">Stok fisik</th><th class="kanan">Selisih</th></tr></thead><tbody></tbody></table></div>
+        <div class="tabel-wadah"><table class="tabel" id="tabel"><thead><tr><th>Produk</th><th>Kategori</th>${sesi.owner ? '<th class="kanan">Harga beli</th>' : ''}<th class="kanan">Stok sistem</th><th class="tengah">Stok fisik</th><th class="kanan">Selisih</th></tr></thead><tbody></tbody></table></div>
       </section>`;
 
     const ringkas = () => {
@@ -88,15 +90,15 @@ export default {
       $('#bar', el).style.width = pct + '%';
       $('#n-terisi', el).textContent = terisi.length;
       $('#n-lebih', el).textContent = lebih.length; $('#n-kurang', el).textContent = kurang.length;
-      $('#n-aset', el).textContent = rp(item.reduce((a, i) => a + Math.max(0, i.stok_sistem) * i.harga_beli, 0));
-      $('#n-selisih', el).textContent = rp(terisi.reduce((a, i) => a + (i.stok_fisik - i.stok_sistem) * i.harga_beli, 0));
+      if (sesi.owner) $('#n-aset', el).textContent = rp(item.reduce((a, i) => a + Math.max(0, i.stok_sistem) * i.harga_beli, 0));
+      if (sesi.owner) $('#n-selisih', el).textContent = rp(terisi.reduce((a, i) => a + (i.stok_fisik - i.stok_sistem) * i.harga_beli, 0));
     };
     const baris = (i) => {
       const p = pm[i.produk_id] || {}; const s = i.stok_fisik === null ? null : i.stok_fisik - i.stok_sistem;
       return `<tr data-id="${i.produk_id}" class="${s === null ? '' : s === 0 ? 'cocok' : 'beda'}">
         <td><b>${esc(p.nama)}</b><small class="blok">${esc(p.kode)} | ${esc(p.barcode || '-')}</small></td>
         <td><span class="pil biru-muda">${esc(kmap[p.kategori_id] || '—')}</span></td>
-        <td class="kanan mono">${rp(i.harga_beli)}</td>
+        ${sesi.owner ? `<td class="kanan mono">${rp(i.harga_beli)}</td>` : ''}
         <td class="kanan"><b>${i.stok_sistem}</b></td>
         <td class="tengah"><input class="input mini fisik" inputmode="numeric" value="${i.stok_fisik ?? ''}" placeholder="—"></td>
         <td class="kanan selisih">${s === null ? '<span class="redup">—</span>' : `<b class="${s > 0 ? 'hijau' : s < 0 ? 'merah' : ''}">${s > 0 ? '+' : ''}${s}</b>`}</td></tr>`;

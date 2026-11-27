@@ -20,7 +20,7 @@ const HALAMAN = {
   karyawan:  { judul: 'Karyawan, Shift & Bonus', pendek: 'Karyawan', ik: 'user', grup: 'OWNER', peran: ['owner'], muat: () => import('./halaman/karyawan.js') },
   promo:     { judul: 'Harga & Promo', pendek: 'Harga & Promo', ik: 'gift', grup: 'OWNER', peran: ['owner'], muat: () => import('./halaman/promo.js') },
   laporan:   { judul: 'Laporan', ik: 'chart', grup: 'OWNER', peran: ['owner'], muat: () => import('./halaman/laporan.js') },
-  pengaturan:{ judul: 'Pengaturan', ik: 'gear', grup: 'OWNER', muat: () => import('./halaman/pengaturan.js') },
+  pengaturan:{ judul: 'Pengaturan', ik: 'gear', grup: 'OWNER', peran: ['owner'], muat: () => import('./halaman/pengaturan.js') },
   menu:      { judul: 'Menu', ik: 'menu', tersembunyi: true, muat: () => import('./halaman/menu.js') },
 };
 export { HALAMAN };
@@ -229,6 +229,7 @@ function kerangka() {
       <div class="kartu-staf">
         ${avatar(s)}
         <div class="info">${namaStaf(s)}<small>${esc(PERAN[s.peran])} · ${esc(s.kode)}</small></div>
+        <button class="btn-ikon" data-pin title="Ganti PIN saya">${ikon('shield', 18)}</button>
         <button class="btn-ikon" data-kunci title="Kunci layar">${ikon('lock', 18)}</button>
         <button class="btn-ikon" data-keluar title="Akhiri shift">${ikon('logout', 18)}</button>
       </div>
@@ -252,6 +253,7 @@ function kerangka() {
     </nav>
   </div>`;
   $$('[data-kunci]').forEach(b => b.onclick = kunciLayar);
+  $$('[data-pin]').forEach(b => b.onclick = gantiPinSaya);
   $('[data-keluar]').onclick = async () => {
     if (!await konfirmasi('Akhiri shift Anda sekarang?', { ya: 'Akhiri shift' })) return;
     await sesi.keluar(); layarPin('Shift diakhiri. Sampai jumpa!');
@@ -267,6 +269,19 @@ function kerangka() {
   }));
 }
 
+// ganti PIN sendiri (semua karyawan), dari kartu profil / menu
+function gantiPinSaya() {
+  const l = lembar({ judul: 'Ganti PIN saya', lebar: 400, isi: `<form id="fpin">
+    <input class="input" name="lama" type="password" inputmode="numeric" maxlength="6" placeholder="PIN lama" required>
+    <input class="input" name="baru" type="password" inputmode="numeric" maxlength="6" placeholder="PIN baru (6 angka)" required>
+    <input class="input" name="ulang" type="password" inputmode="numeric" maxlength="6" placeholder="Ulangi PIN baru" required>
+    <button class="btn utama besar penuh" type="submit">${ikon('check', 18)} Ganti PIN</button></form>` });
+  $('#fpin', l.el).onsubmit = (e) => { e.preventDefault(); const f = e.target;
+    if (f.baru.value !== f.ulang.value) return toast('PIN baru tidak sama', 'err');
+    sibuk($('[type=submit]', f), async () => { try { await aksi('ganti_pin_sendiri', { p_pin_lama: f.lama.value, p_pin_baru: f.baru.value }); toast('PIN diganti'); l.tutup(); } catch (er) { salah(er); } });
+  };
+}
+
 function bukaMenuDorong() {
   const s = sesi.staf, grup = {};
   for (const [id, h] of Object.entries(HALAMAN)) if (!h.tersembunyi && bolehBuka(id)) (grup[h.grup] ||= []).push(id);
@@ -276,11 +291,12 @@ function bukaMenuDorong() {
   menuDorong({
     isiHTML: `<div class="zd-profil">${avatar(s, 'besar')}<div>${namaStaf(s)}<small>${esc(PERAN[s.peran])} · ${esc(s.kode)}</small></div></div>
       <div class="zd-daftar">${Object.entries(grup).map(([g, ids]) => `<div class="zd-grup">${g}</div>${ids.map(id => `<a href="#/${id}" class="zd-item ${id === kini ? 'on' : ''}">${ikon(HALAMAN[id].ik, 18)}<span>${esc(HALAMAN[id].pendek || HALAMAN[id].judul)}</span></a>`).join('')}`).join('')}</div>
-      <div class="zd-bawah"><button class="btn kecil gelap" data-zd="kunci">${ikon('lock', 16)} Kunci</button><button class="btn kecil merah-garis" data-zd="keluar">${ikon('logout', 16)} Akhiri shift</button></div>`,
+      <div class="zd-bawah"><button class="btn kecil gelap" data-zd="pin">${ikon('shield', 16)} Ganti PIN</button><button class="btn kecil gelap" data-zd="kunci">${ikon('lock', 16)} Kunci</button><button class="btn kecil merah-garis" data-zd="keluar">${ikon('logout', 16)} Akhiri shift</button></div>`,
     saatTutup: () => { if (kini !== 'menu') tabMenu?.classList.remove('aktif'); },
   });
   const m = $('.zk-menu-dorong');
   $('[data-zd="kunci"]', m).onclick = () => setTimeout(kunciLayar, 300);
+  $('[data-zd="pin"]', m).onclick = () => setTimeout(gantiPinSaya, 300);
   $('[data-zd="keluar"]', m).onclick = () => setTimeout(() => $('[data-keluar]')?.click(), 300);
 }
 

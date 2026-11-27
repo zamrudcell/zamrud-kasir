@@ -26,6 +26,18 @@ function rapikanError(body, status) {
   return new ApiError(m, kode);
 }
 
+// token sesi karyawan dikirim di header agar database tahu siapa yang meminta (owner / bukan)
+let tokenStaf = null;
+export const setTokenStaf = (t) => { tokenStaf = t || null; };
+// kolom yang boleh dibaca semua karyawan (modal / harga beli hanya lewat fungsi khusus owner)
+const KOLOM = {
+  produk: 'id,kode,barcode,nama,kategori_id,harga_jual,stok,stok_minimum,satuan,garansi_hari,aktif,dibuat,diubah',
+  transaksi: 'id,nomor,staf_id,pelanggan_id,subtotal,diskon,total,bayar,kembali,metode,catatan,status,batal_oleh,batal_alasan,batal_waktu,dibuat',
+  transaksi_item: 'id,transaksi_id,produk_id,nama,qty,harga,diskon,subtotal,gratis,promo_id,garansi_hari,qty_retur',
+  servis_sparepart: 'id,servis_id,produk_id,nama,qty,harga,gratis,promo_id,staf_id,dibuat',
+  opname_item: 'opname_id,produk_id,stok_sistem,stok_fisik,diisi_oleh,diisi_waktu',
+};
+
 async function minta(path, { method = 'GET', body, headers = {}, tanpaToken = false } = {}) {
   if (!tanpaToken) await pastikanTokenSegar();
   let res;
@@ -36,6 +48,7 @@ async function minta(path, { method = 'GET', body, headers = {}, tanpaToken = fa
         apikey: SUPABASE_KEY,
         'Content-Type': 'application/json',
         ...(auth && !tanpaToken ? { Authorization: 'Bearer ' + auth.access_token } : {}),
+        ...(tokenStaf ? { 'x-staf-token': tokenStaf } : {}),
         ...headers,
       },
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -86,7 +99,7 @@ export const api = {
   // ambil(tabel, { select, eq:{kol:val}, gte, lte, ilike, inn, or, order:'kol.desc', limit })
   ambil(tabel, o = {}) {
     const q = new URLSearchParams();
-    q.set('select', o.select || '*');
+    q.set('select', o.select || KOLOM[tabel] || '*');
     for (const [op, isi] of Object.entries({ eq: o.eq, neq: o.neq, gte: o.gte, lte: o.lte, lt: o.lt, gt: o.gt, ilike: o.ilike, is: o.is })) {
       if (!isi) continue;
       for (const [k, v] of Object.entries(isi)) if (v !== undefined && v !== null && v !== '') q.append(k, op + '.' + v);

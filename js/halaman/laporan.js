@@ -2,7 +2,7 @@ import { api } from '../api.js';
 import { aksi } from '../sesi.js';
 import { esc, ikon, rp, tgl, $, $$, toast, salah, lembar, sibuk, kosong, hariIni, geserHari, awalHari, akhirHari, angka, konfirmasi, animasiAngka } from '../ui.js';
 import { petaStaf } from '../data.js';
-import { grafikArus } from '../grafik.js';
+import { grafikArus, grafikDonat } from '../grafik.js';
 
 function grafikBatang(data) {
   // data: [{label, nilai}]
@@ -62,6 +62,10 @@ export default {
           <div class="stat merah muncul d3"><small>Piutang servis</small><b data-hitung="${n('belum_lunas')}" data-rp>0</b><em>belum lunas (periode ini)</em></div>
         </section>
         <section class="kartu muncul d2 kartu-arus" id="arus"></section>
+        <div class="dua-kolom">
+          <section class="kartu muncul d3" id="donat-asal"></section>
+          <section class="kartu muncul d3" id="donat-ke"></section>
+        </div>
         <section class="kartu muncul d3"><h3>${ikon('list', 18)} Rincian laba rugi</h3>
           <div class="tabel-ringkas laporan">
             <div class="baris"><span>Penjualan barang</span><span>${rp(n('penjualan'))}</span></div>
@@ -77,6 +81,16 @@ export default {
             <div class="baris besar"><span>LABA BERSIH</span><b class="${bersih >= 0 ? 'hijau' : 'merah'}">${rp(bersih)}</b></div>
           </div></section>`;
       animasiAngka(isi);
+      grafikDonat($('#donat-asal', isi), `${ikon('money', 18)} Asal pemasukan`, [
+        { nama: 'Penjualan barang', nilai: Math.max(0, n('penjualan') - n('retur')), kelas: 's-uang' },
+        { nama: 'Jasa servis', nilai: n('jasa'), kelas: 's-barang' },
+        { nama: 'Sparepart servis', nilai: n('jual_sparepart'), kelas: 's-emas' },
+      ], { tengah: 'Pendapatan' });
+      grafikDonat($('#donat-ke', isi), `${ikon('wallet', 18)} Ke mana uangnya`, [
+        { nama: 'Modal barang', nilai: Math.max(0, hpp), kelas: 's-barang' },
+        { nama: 'Pengeluaran', nilai: n('pengeluaran'), kelas: 's-keluar' },
+        { nama: bersih >= 0 ? 'Laba bersih' : 'Rugi', nilai: Math.abs(bersih), kelas: bersih >= 0 ? 's-uang' : 's-merah' },
+      ], { tengah: 'Total' });
       grafikArus($('#arus', isi), dari, sampai, { judul: `${ikon('chart', 18)} Pemasukan, barang masuk & pengeluaran` }).catch(e => { $('#arus', isi).innerHTML = kosong(e.message, 'alert'); });
     }
 

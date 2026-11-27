@@ -1,5 +1,6 @@
 import { api } from '../api.js';
 import { grafikArus } from '../grafik.js';
+import { ambilModal } from '../data.js';
 import { sesi } from '../sesi.js';
 import { esc, ikon, rp, tgl, geserHari, hariIni, awalHari, akhirHari, animasiAngka, PERAN, STATUS_SERVIS, $ } from '../ui.js';
 
@@ -42,14 +43,15 @@ export default {
 
     const filterStaf = sesi.owner ? {} : { staf_id: s.id };
     const [trx, servis, tipis, tugas, retur] = await Promise.all([
-      api.ambil('transaksi', { select: 'id,nomor,total,modal,staf_id,dibuat,status', eq: { status: 'selesai', ...filterStaf }, gte: { dibuat: awalHari(h) }, lte: { dibuat: akhirHari(h) }, order: 'dibuat.desc' }),
+      api.ambil('transaksi', { select: 'id,nomor,total,staf_id,dibuat,status', eq: { status: 'selesai', ...filterStaf }, gte: { dibuat: awalHari(h) }, lte: { dibuat: akhirHari(h) }, order: 'dibuat.desc' }),
       api.ambil('servis', { select: 'id,status', inn: { status: ['antri', 'dikerjakan', 'tunggu_sparepart', 'siap_diambil'] } }),
       api.ambil('v_stok_menipis', { select: 'id,nama,stok,batas', order: 'stok.asc', limit: 6 }),
       sesi.owner ? [] : api.ambil('tugas', { eq: { staf_id: s.id, tanggal: h } , order: 'dibuat.asc' }),
       sesi.owner ? api.ambil('retur', { select: 'id', eq: { status: 'menunggu' } }) : [],
     ]);
     const omzet = trx.reduce((a, x) => a + Number(x.total), 0);
-    const laba = trx.reduce((a, x) => a + Number(x.total) - Number(x.modal), 0);
+    const md = sesi.owner ? await ambilModal('transaksi', trx.map(x => x.id)).catch(() => ({})) : {};
+    const laba = trx.reduce((a, x) => a + Number(x.total) - (md[x.id] || 0), 0);
     const aktif = servis.filter(x => x.status !== 'siap_diambil').length;
     const siap = servis.filter(x => x.status === 'siap_diambil').length;
     $('#stat', el).innerHTML = `

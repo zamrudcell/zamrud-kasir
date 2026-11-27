@@ -1,9 +1,10 @@
 // Sesi karyawan (kode + PIN) & kunci otomatis saat tidak dipakai
-import { api } from './api.js';
+import { api, setTokenStaf } from './api.js';
 
 const KUNCI = 'zk_staf';
 let staf = null;
 try { staf = JSON.parse(sessionStorage.getItem(KUNCI) || 'null'); } catch { staf = null; }
+setTokenStaf(staf?.token);
 
 const pendengar = new Set();
 export const sesi = {
@@ -13,7 +14,7 @@ export const sesi = {
   pengaturan: null,
 
   set(s) {
-    staf = s;
+    staf = s; setTokenStaf(s?.token);
     try { s ? sessionStorage.setItem(KUNCI, JSON.stringify(s)) : sessionStorage.removeItem(KUNCI); } catch {}
     pendengar.forEach(f => f(s));
   },

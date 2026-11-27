@@ -933,22 +933,30 @@ body.tema-cerah.zk-dorong-siap .utama { background: #eef2ee; }
 /* =====================================================================
    v1.6 — font developer, layar mendatar, zoom blur, grafik arus
    ===================================================================== */
-:root { font-family: var(--font-judul, "Space Grotesk"), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+/* (v1.7) tulisan biasa: font sistem yang jelas; judul & angka: font pilihan */
+:root { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; }
 input, select, textarea, button { font-family: inherit; }
-h1, h2, h3, h4, .topbar h1 { letter-spacing: -.015em; }
+:is(h1, h2, h3, h4, .topbar h1, .merek b, .hero h2, .nama-owner, .zd-profil b, .kartu-staf b) {
+  font-family: var(--font-judul, "Exo 2"), -apple-system, "Segoe UI", sans-serif; font-style: var(--gaya-judul, normal); font-weight: var(--tebal-judul, 800); letter-spacing: 0;
+}
+.topbar h1 { font-size: calc(1.6rem * var(--skala-judul, 1)); }
+.hero h2 { font-size: calc(1.7rem * var(--skala-judul, 1)); }
+.kartu h3 { font-size: calc(1.02rem * var(--skala-judul, 1)); }
+.lembar-kepala h3 { font-size: calc(1.15rem * var(--skala-judul, 1)); }
+@media (min-width: 900px) { .hero h2 { font-size: calc(2.1rem * var(--skala-judul, 1)); } .merek b { font-size: calc(1.25rem * var(--skala-judul, 1)); } }
 .mono, code, kbd, .kp-kode, .kp-harga, .kp-stok, .bs-no, .bs-harga, .lb-harga, .total-besar, .stat b, .angka, .hero-jam,
 .titik-pin, .tombol-pin button, .sukses h3, .zk-saklar-ket, .tabel td.kanan, .baris-ringkas > b, .tabel-ringkas .baris > span:last-child,
 .tabel-ringkas .baris > b, .grafik text, .arus-fig text, .pil-emas, .mini-tgl, input[inputmode="numeric"], input[type="date"] {
-  font-family: var(--font-kode, "JetBrains Mono"), ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums;
+  font-family: var(--font-kode, "Chakra Petch"), ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums;
 }
-.stat b, .total-besar, .kp-harga { letter-spacing: -.03em; }
-.nota, .nota * { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace !important; }
+.stat b, .total-besar, .kp-harga { font-weight: max(var(--tebal-kode, 600), 300); letter-spacing: -.02em; }
+.nota, .nota * { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace !important; font-style: normal !important; }
 
 /* pilihan font */
 .pilih-font { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr)); gap: 10px; margin: 6px 0 14px; }
 .pilih-font button { display: grid; gap: 3px; text-align: left; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--garis); background: rgba(255, 255, 255, .04); transition: transform .2s var(--pegas), border-color .2s, box-shadow .2s; }
-.pilih-font button b { font-family: var(--fj), sans-serif; font-size: 1.15rem; font-weight: 700; }
-.pilih-font button code { font-family: var(--fk), monospace; font-size: .82rem; white-space: nowrap; color: var(--emas); }
+.pilih-font button b { font-family: var(--fj), sans-serif; font-style: var(--gj); font-weight: var(--bj); font-size: calc(1.25rem * var(--sj)); line-height: 1.15; }
+.pilih-font button code { font-family: var(--fk), monospace; font-weight: var(--bk); font-size: .95rem; white-space: nowrap; color: var(--emas); }
 .pilih-font button small { font-family: inherit; font-size: .72rem; opacity: .7; }
 .pilih-font button.aktif { border-color: #34d399; box-shadow: 0 0 0 1px #34d399, 0 0 20px -6px #34d399; }
 .pilih-font button:active { transform: scale(.97); }
@@ -994,19 +1002,53 @@ body.zk-pindah .halaman * { transition: none !important; }
 body.zk-pindah.tema-kaca .grafik .batang { filter: none; }
 @media (prefers-reduced-motion: reduce) { .halaman.masuk > *, .halaman.masuk .muncul { animation: none; } }
 
-/* grafik arus uang & barang */
-.arus-fig { position: relative; height: 230px; margin-top: 6px; }
+/* grafik garis ala saham + arus listrik, dan donat */
+.s-uang { --w: #10b981; } .s-barang { --w: #3b82f6; } .s-keluar { --w: #f97316; } .s-emas { --w: #eab308; } .s-merah { --w: #ef4444; }
+body.tema-mewah .s-uang { --w: #34d399; } body.tema-mewah .s-barang { --w: #94a3b8; } body.tema-mewah .s-emas, body.tema-mewah .s-keluar { --w: #f6d27a; }
+body.tema-mewah .s-keluar { --w: #fb923c; }
+.arus-fig { position: relative; height: 240px; margin-top: 6px; touch-action: pan-y; }
 .arus-fig.kecil { height: 170px; }
-.arus-fig svg { position: absolute; inset: 0; display: block; }
+.arus-fig svg { position: absolute; inset: 0; display: block; overflow: visible; }
 .arus-fig text { font-size: 10.5px; fill: var(--redup); }
-.arus-fig .g-garis { stroke: currentColor; opacity: .12; stroke-dasharray: 3 4; }
-.arus-fig rect { transform-origin: bottom; transform-box: fill-box; animation: tumbuh .6s var(--halus) both; animation-delay: calc(min(var(--i), 30) * 14ms); }
-.s-uang { fill: #10b981; background: #10b981; } .s-barang { fill: #3b82f6; background: #3b82f6; } .s-keluar { fill: #f97316; background: #f97316; }
-body.tema-mewah .s-uang { fill: #34d399; background: #34d399; } body.tema-mewah .s-barang { fill: #f6d27a; background: #f6d27a; } body.tema-mewah .s-keluar { fill: #cbd5e1; background: #cbd5e1; }
+.arus-fig .g-garis { stroke: currentColor; opacity: .1; stroke-dasharray: 3 4; }
+.arus-fig stop { stop-color: var(--w); }
+.g-area { animation: g-muncul .8s ease both; }
+.g-sinar { fill: none; stroke: var(--w); stroke-width: 7; opacity: .14; stroke-linecap: round; }
+.g-garis-seri { fill: none; stroke: var(--w); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1000; animation: g-tarik 1.1s cubic-bezier(.4, 0, .2, 1) both; }
+.g-arus { fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 26 974; opacity: .9; animation: g-arus 2.8s linear infinite; }
+body.tema-cerah .g-arus { stroke: var(--w); filter: brightness(1.5); }
+.g-ujung { fill: var(--w); stroke: #fff; stroke-width: 1.5; animation: g-denyut 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.g-kursor { stroke: var(--redup); stroke-width: 1; stroke-dasharray: 2 3; }
+.g-tip { position: absolute; top: 0; z-index: 2; display: grid; gap: 2px; padding: 8px 10px; border-radius: 12px; font-size: .78rem; pointer-events: none; white-space: nowrap;
+  background: rgba(10, 14, 26, .92); color: #fff; border: 1px solid rgba(255, 255, 255, .14); box-shadow: 0 10px 24px -10px rgba(0, 0, 0, .6); }
+.g-tip span { display: flex; align-items: center; gap: 6px; font-family: var(--font-kode), ui-monospace, monospace; }
+.g-tip i, .arus-leg i, .donat-leg i { width: 10px; height: 10px; border-radius: 3px; background: var(--w); flex: none; box-shadow: 0 0 8px var(--w); }
+@keyframes g-tarik { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
+@keyframes g-arus { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
+@keyframes g-muncul { from { opacity: 0; } to { opacity: 1; } }
+@keyframes g-denyut { 50% { transform: scale(1.5); } }
 .arus-leg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
 .arus-leg div { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 7px; padding: 8px 10px; border-radius: 12px; background: rgba(127, 127, 127, .08); }
-.arus-leg i { width: 10px; height: 10px; border-radius: 3px; grid-row: span 2; }
+.arus-leg i { grid-row: span 2; }
 .arus-leg span { font-size: .75rem; opacity: .75; }
 .arus-leg b { font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 560px) { .arus-leg { grid-template-columns: 1fr; } .arus-leg div { grid-template-columns: auto 1fr auto; } .arus-leg i { grid-row: auto; } }
 .kartu-arus .kartu-kepala h3 a { display: inline-flex; gap: 6px; align-items: center; }
+/* donat */
+.donat { display: grid; grid-template-columns: minmax(130px, 170px) minmax(0, 1fr); gap: 16px; align-items: center; margin-top: 8px; }
+.donat-fig { position: relative; aspect-ratio: 1; }
+.donat-fig svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+.d-dasar { fill: none; stroke: rgba(127, 127, 127, .12); stroke-width: 16; }
+.d-busur { fill: none; stroke: var(--w); stroke-width: 16; stroke-dasharray: var(--pj) var(--k); filter: drop-shadow(0 0 4px var(--w)); cursor: pointer;
+  animation: d-gambar .9s cubic-bezier(.3, 1.2, .5, 1) both; animation-delay: calc(var(--i) * 120ms); transition: opacity .2s, stroke-width .25s var(--pegas); }
+.d-busur.redup { opacity: .25; }
+.d-busur:not(.redup):hover { stroke-width: 19; }
+@keyframes d-gambar { from { stroke-dasharray: 0 var(--k); } }
+.donat-tengah { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; }
+.donat-tengah small { font-size: .7rem; opacity: .7; max-width: 90px; }
+.donat-tengah b { font-size: 1.3rem; }
+.donat-leg { display: grid; gap: 6px; }
+.donat-leg button { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "i n p" "i v v"; column-gap: 8px; align-items: center; text-align: left; padding: 8px 10px; border-radius: 12px; background: rgba(127, 127, 127, .08); }
+.donat-leg i { grid-area: i; } .donat-leg span { grid-area: n; font-size: .8rem; opacity: .8; } .donat-leg b { grid-area: v; font-size: .9rem; } .donat-leg em { grid-area: p; font-style: normal; font-size: .75rem; opacity: .7; }
+@media (max-width: 420px) { .donat { grid-template-columns: 1fr; } .donat-fig { max-width: 180px; margin: 0 auto; } }
+@media (prefers-reduced-motion: reduce) { .g-arus, .g-ujung { animation: none; } }
