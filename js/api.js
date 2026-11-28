@@ -97,7 +97,17 @@ export const api = {
   },
 
   // ambil(tabel, { select, eq:{kol:val}, gte, lte, ilike, inn, or, order:'kol.desc', limit })
-  ambil(tabel, o = {}) {
+  async ambil(tabel, o = {}) {
+    try { return await this._ambil(tabel, o); }
+    catch (e) {
+      // kolom baru belum ada (SQL terbaru belum dijalankan): ulangi tanpa kolom tambahan
+      const kol = KOLOM[tabel];
+      if (!o.select && kol && /harga_member|member_id/.test(e.message || '')) return this._ambil(tabel, { ...o, select: kol.split(',').filter(c => !['harga_member', 'member_id'].includes(c)).join(',') });
+      throw e;
+    }
+  },
+
+  _ambil(tabel, o = {}) {
     const q = new URLSearchParams();
     q.set('select', o.select || KOLOM[tabel] || '*');
     for (const [op, isi] of Object.entries({ eq: o.eq, neq: o.neq, gte: o.gte, lte: o.lte, lt: o.lt, gt: o.gt, ilike: o.ilike, is: o.is })) {
