@@ -15,6 +15,22 @@ const AKSI = {
   ganti_pin: 'ganti PIN', simpan_bonus: 'ubah aturan bonus', pengeluaran: 'pengeluaran', hapus_pengeluaran: 'hapus pengeluaran', hapus_sparepart: 'hapus sparepart',
 };
 
+// cincin kecil penyimpanan database (paket gratis Supabase 500 MB)
+async function cincinDatabase(el) {
+  const mb = (b) => (b / 1048576).toLocaleString('id-ID', { maximumFractionDigits: b < 10485760 ? 1 : 0 }) + ' MB';
+  try {
+    const r = await aksi('ukuran_database', {});
+    const pakai = Number(r.terpakai), batas = Number(r.batas), pr = Math.min(100, pakai / batas * 100);
+    const R = 22, K = 2 * Math.PI * R, warna = pr >= 90 ? '#ef4444' : pr >= 70 ? '#e9c46a' : '#10b981';
+    el.innerHTML = `<svg viewBox="0 0 56 56" width="56" height="56"><circle cx="28" cy="28" r="${R}" class="cd-dasar"/>
+      <circle cx="28" cy="28" r="${R}" class="cd-isi" stroke="${warna}" stroke-dasharray="${(K * pr / 100).toFixed(1)} ${K.toFixed(1)}" style="--k:${K.toFixed(1)}"/>
+      <text x="28" y="31" text-anchor="middle">${pr < 10 ? pr.toFixed(1) : Math.round(pr)}%</text></svg>
+      <div class="cd-teks"><b>Database</b><span>${mb(pakai)} / ${mb(batas)}</span><span>sisa ${mb(batas - pakai)}</span></div>
+      <div class="cd-rinci">${(r.tabel || []).map(t => `<span>${esc(t.nama)}<i>${mb(Number(t.byte))}</i></span>`).join('')}</div>`;
+    el.onclick = () => el.classList.toggle('buka');
+  } catch { el.remove(); } // SQL 009 belum dijalankan
+}
+
 export default {
   async tampil(el) {
     const p = sesi.pengaturan || {};
@@ -51,7 +67,9 @@ export default {
       <section class="kartu muncul d3"><div class="kartu-kepala"><h3>${ikon('shield', 18)} Akun toko</h3></div>
         <div class="baris-ringkas"><span>Login sebagai<small class="blok">${esc(api.email)}</small></span><button class="btn merah-garis" id="keluar-toko">${ikon('logout', 16)} Keluar akun toko</button></div>
         <p class="redup kecil">ZAMRUD KASIR v${VERSI} · data tersimpan online (Supabase) · aman dari manipulasi antar karyawan.</p></section>
-      ${sesi.owner ? `<section class="kartu muncul d4"><div class="kartu-kepala"><h3>${ikon('history', 18)} Log aktivitas</h3><select class="input" id="log-staf"><option value="">Semua</option></select></div><div class="linimasa" id="log"></div></section>` : ''}`;
+      ${sesi.owner ? `<section class="kartu muncul d4"><div class="kartu-kepala"><h3>${ikon('history', 18)} Log aktivitas</h3><select class="input" id="log-staf"><option value="">Semua</option></select></div><div class="linimasa" id="log"></div></section>` : ''}
+      ${sesi.owner ? `<div class="cincin-db muncul" id="cincin-db" title="Penyimpanan database"></div>` : ''}`;
+    if (sesi.owner) cincinDatabase($('#cincin-db', el));
 
     const ft = $('#ft', el);
     if (ft) ft.onsubmit = (e) => { e.preventDefault(); sibuk($('[type=submit]', ft), async () => {

@@ -1077,3 +1077,18 @@ body .pil.emas { background: linear-gradient(180deg, #f6d27a, #c9a24a) !importan
   .kartu-member-cetak svg { height: 9mm; width: auto; max-width: 100%; }
   .km-ket { font-size: 6pt; color: #555; line-height: 1.3; }
 }
+
+/* v1.8.3 — cincin penyimpanan database (Pengaturan, kiri bawah, samar) */
+.cincin-db { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 6px 0 4px 2px; padding: 6px 12px 6px 6px; border-radius: 16px;
+  opacity: .5; cursor: pointer; transition: opacity .25s, background .25s; max-width: 100%; }
+.cincin-db:hover, .cincin-db.buka { opacity: 1; background: rgba(127, 127, 127, .08); }
+.cincin-db svg { transform: rotate(-90deg); flex: none; }
+.cincin-db svg text { transform: rotate(90deg); transform-origin: 28px 28px; font: 700 10.5px var(--font-kode, ui-monospace), monospace; fill: currentColor; }
+.cd-dasar { fill: none; stroke: rgba(127, 127, 127, .22); stroke-width: 5; }
+.cd-isi { fill: none; stroke-width: 5; stroke-linecap: round; animation: cd-gambar 1.2s cubic-bezier(.3, 1, .4, 1) both; filter: drop-shadow(0 0 3px currentColor); }
+@keyframes cd-gambar { from { stroke-dasharray: 0 var(--k); } }
+.cd-teks { display: grid; line-height: 1.25; font-size: .72rem; }
+.cd-teks b { font-size: .78rem; letter-spacing: .04em; } .cd-teks span { opacity: .8; font-family: var(--font-kode, ui-monospace), monospace; }
+.cd-rinci { display: none; width: 100%; gap: 2px 14px; flex-wrap: wrap; font-size: .7rem; opacity: .85; padding-left: 4px; }
+.cincin-db.buka .cd-rinci { display: flex; }
+.cd-rinci span { display: inline-flex; gap: 6px; } .cd-rinci i { font-style: normal; font-family: var(--font-kode, ui-monospace), monospace; opacity: .75; }
