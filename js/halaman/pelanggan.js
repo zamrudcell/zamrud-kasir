@@ -2,7 +2,6 @@ import { api } from '../api.js';
 import { esc, ikon, rp, tgl, $, $$, lembar, kosong, toast, salah, sibuk, konfirmasi, STATUS_SERVIS } from '../ui.js';
 import { sesi, aksi } from '../sesi.js';
 import { cetak } from '../nota.js';
-import { barcodeSVG } from '../barcode.js';
 
 // owner menambah pelanggan member langsung (kode member dibuat otomatis)
 function formMember(saatSimpan) {
@@ -11,13 +10,13 @@ function formMember(saatSimpan) {
     <label class="lbl s2">Nomor WA<input class="input" name="hp" inputmode="tel" required placeholder="08…"></label>
     <label class="lbl s2">Alamat <small class="redup">(opsional)</small><input class="input" name="alamat"></label>
     <label class="lbl s2">Catatan <small class="redup">(opsional)</small><input class="input" name="catatan" placeholder="misal: langganan servis sejak 2024"></label>
-    <p class="redup kecil s2">Nomor WA ini yang harus cocok dengan kode member saat belanja / servis. Bila nomor sudah pernah tercatat, data pelanggan lamanya yang dijadikan member.</p>
-    <button class="btn utama besar s2" type="submit">${ikon('star', 18)} Simpan & buat kode member</button></form>` });
+    <p class="redup kecil s2">Nomor WA ini yang dicek saat belanja / servis untuk harga member. Bila nomor sudah pernah tercatat, data pelanggan lamanya yang dijadikan member.</p>
+    <button class="btn utama besar s2" type="submit">${ikon('star', 18)} Simpan member</button></form>` });
   const f = $('#fmb', l.el); setTimeout(() => f.nama.focus(), 300);
   f.onsubmit = (e) => { e.preventDefault(); sibuk($('[type=submit]', f), async () => {
     try {
       const r = await aksi('tambah_member', { p_nama: f.nama.value.trim(), p_hp: f.hp.value.trim(), p_alamat: f.alamat.value.trim(), p_catatan: f.catatan.value.trim() });
-      toast(`${r.nama} jadi member ${r.kode}`); l.tutup();
+      toast(`${r.nama} sekarang member`); l.tutup();
       const p = await api.satu('pelanggan', { eq: { id: r.id } });
       saatSimpan(p || { id: r.id, nama: r.nama, hp: r.hp, kode_member: r.kode, member_aktif: true, dibuat: new Date().toISOString() });
     } catch (er) { salah(er); }
@@ -27,8 +26,8 @@ function formMember(saatSimpan) {
 // kartu member untuk dicetak / difoto
 function cetakKartu(p) {
   cetak(`<section class="kartu-member-cetak"><div class="km-atas"><img src="assets/gem.png" alt=""><div><b>ZAMRUD CELL</b><small>KARTU MEMBER</small></div></div>
-    <div class="km-nama">${esc(p.nama)}</div><div class="km-kode">${esc(p.kode_member)}</div>${barcodeSVG(p.kode_member, { tinggi: 38, modul: 1.6 })}
-    <div class="km-ket">Sebutkan kode member & nomor WA terdaftar saat belanja / servis untuk mendapat harga member.</div></section>`, 'Kartu member ' + p.kode_member);
+    <div class="km-nama">${esc(p.nama)}</div><div class="km-kode">${esc(p.hp || '')}</div>
+    <div class="km-ket">Sebutkan nomor WA terdaftar saat belanja / servis untuk mendapat harga member.</div></section>`, 'Kartu member ' + p.nama);
 }
 import { bukaServis } from './servis.js';
 import { bukaTransaksi } from './transaksi.js';
@@ -46,7 +45,7 @@ async function detail(p, saatBerubah = () => {}) {
     <div class="grid-info"><div><small>No HP</small><b>${esc(p.hp || '-')}</b></div><div><small>Pelanggan sejak</small><b>${tgl(p.dibuat, false)}</b></div>
       <div><small>Total belanja</small><b>${rp(belanja)}</b></div><div><small>Jumlah servis</small><b>${servis.length}</b></div></div>
     <div class="kotak-member ${p.member_aktif ? 'aktif' : ''}">${ikon('star', 18)}
-      ${p.member_aktif ? `<span><b>MEMBER · ${esc(p.kode_member)}</b><small>Harga member berlaku bila kode & no WA ${esc(p.hp || '')} cocok</small></span><button class="btn kecil" data-kartu>${ikon('print', 16)} Kartu</button>${sesi.owner ? '<button class="btn kecil merah-garis" data-cabut>Cabut</button>' : ''}`
+      ${p.member_aktif ? `<span><b>MEMBER</b><small>Harga member berlaku untuk nomor WA ${esc(p.hp || '')}</small></span><button class="btn kecil" data-kartu>${ikon('print', 16)} Kartu</button>${sesi.owner ? '<button class="btn kecil merah-garis" data-cabut>Cabut</button>' : ''}`
         : `<span><b>Bukan member</b><small>${sesi.owner ? 'Owner bisa menjadikan pelanggan ini member' : 'Hanya owner yang bisa menjadikan member'}</small></span>${sesi.owner ? '<button class="btn kecil utama" data-jadikan>Jadikan member</button>' : ''}`}
     </div>
     ${p.hp ? `<a class="btn abu" href="https://wa.me/${esc(p.hp.replace(/^0/, '62').replace(/\D/g, ''))}" target="_blank" rel="noopener">${ikon('phone', 16)} Chat WhatsApp</a>` : ''}
@@ -59,7 +58,7 @@ async function detail(p, saatBerubah = () => {}) {
     if (!aktif && !await konfirmasi(`Cabut status member ${p.nama}? Harga member tidak berlaku lagi.`, { bahaya: true, ya: 'Cabut' })) return;
     try {
       const kd = await aksi('atur_member', { p_pelanggan: p.id, p_aktif: aktif });
-      p.member_aktif = aktif; p.kode_member = kd; toast(aktif ? `${p.nama} jadi member ${kd}` : 'Status member dicabut');
+      p.member_aktif = aktif; p.kode_member = kd; toast(aktif ? `${p.nama} sekarang member` : 'Status member dicabut');
       l.tutup(); saatBerubah(); detail(p, saatBerubah);
     } catch (er) { salah(er); }
   };
@@ -87,7 +86,7 @@ export default {
         ...($('#hanya-member', el).checked ? { eq: { member_aktif: 'true' } } : {}), order: 'dibuat.desc', limit: 200 })
         .catch(() => api.ambil('pelanggan', { or: q ? `nama.ilike.*${qq}*,hp.ilike.*${qq}*` : undefined, order: 'dibuat.desc', limit: 200 }));
       $('#daftar', el).innerHTML = d.length ? d.map((p, i) => `<button class="baris-daftar muncul" style="--i:${Math.min(i, 15)}" data-id="${p.id}">
-        <span class="avatar kecil">${esc(p.nama[0] || '?')}</span><span class="bd-utama"><b>${esc(p.nama)}</b><small>${esc(p.hp || '-')}</small></span>${p.member_aktif ? `<span class="pil emas">${ikon('star', 12)} ${esc(p.kode_member)}</span>` : ''}${ikon('chevron', 18)}</button>`).join('') : kosong('Belum ada pelanggan', 'users');
+        <span class="avatar kecil">${esc(p.nama[0] || '?')}</span><span class="bd-utama"><b>${esc(p.nama)}</b><small>${esc(p.hp || '-')}</small></span>${p.member_aktif ? `<span class="pil emas">${ikon('star', 12)} Member</span>` : ''}${ikon('chevron', 18)}</button>`).join('') : kosong('Belum ada pelanggan', 'users');
       $$('[data-id]', el).forEach(b => b.onclick = () => detail(d.find(p => p.id === b.dataset.id), () => muat($('#q', el).value.trim())));
     };
     const bm = $('#baru-member', el);

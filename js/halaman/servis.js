@@ -49,7 +49,7 @@ export async function bukaServis(id, saatBerubah = () => {}) {
       <div class="baris"><span>Estimasi awal</span><span>${rp(v.estimasi_biaya)}</span></div>
       <div class="baris"><span>Jasa servis</span><span class="gabung-kanan">${!selesai || sesi.owner ? `<input class="input mini" id="jasa" inputmode="numeric" value="${Number(v.biaya_jasa) || ''}" placeholder="0"><button class="btn kecil" id="simpan-jasa">Simpan</button>` : rp(v.biaya_jasa)}</span></div>
       ${spare.map(s => `<div class="baris"><span>${ikon('box', 14)} ${esc(s.nama)} x${s.qty}</span><span>${s.gratis ? '<span class="pil hijau">GRATIS</span>' : rp(s.harga * s.qty)} ${sesi.owner && !selesai ? `<button class="btn-ikon kecil" data-hapus-sp="${s.id}">${ikon('trash', 14)}</button>` : ''}</span></div>`).join('')}
-      ${member ? `<div class="baris emas"><span>${ikon('star', 14)} Harga member: ${esc(member.nama)} ${esc(member.kode_member || '')}</span><span></span></div>`
+      ${member ? `<div class="baris emas"><span>${ikon('star', 14)} Harga member: ${esc(member.nama)}</span><span></span></div>`
         : (!selesai ? `<div class="baris"><button class="btn-teks" id="pasang-member">${ikon('star', 16)} Pelanggan member? Pakai harga member</button></div>` : '')}
       ${!selesai ? `<div class="baris"><button class="btn-teks" id="tambah-sp">${ikon('plus', 16)} Tambah sparepart dari stok</button></div>` : ''}
       <div class="baris besar"><span>Total tagihan</span><b>${rp(v.total_tagihan)}</b></div>
@@ -79,16 +79,15 @@ export async function bukaServis(id, saatBerubah = () => {}) {
   const pm = $('#pasang-member', l.el);
   if (pm) pm.onclick = () => {
     const m = lembar({ judul: 'Harga member', lebar: 420, isi: `<form id="fm">
-      <p class="redup kecil">Isi <b>kode member</b> dan <b>nomor WA</b> yang terdaftar. Bila cocok, sparepart memakai harga member. Pengecekan tercatat.</p>
-      <label class="lbl">Kode member<input class="input mono" name="kode" placeholder="ZM-0001" autocapitalize="characters" required></label>
+      <p class="redup kecil">Isi <b>nomor WA</b> member. Bila terdaftar sebagai member, sparepart memakai harga member. Pengecekan tercatat.</p>
       <label class="lbl">Nomor WA member<input class="input" name="hp" inputmode="tel" value="${esc(v.hp || '')}" required></label>
       <button class="btn utama besar penuh" type="submit">${ikon('check', 18)} Pakai harga member</button></form>` });
     const f = $('#fm', m.el);
     f.onsubmit = (e) => { e.preventDefault(); sibuk($('[type=submit]', f), async () => {
       try {
-        const r = await aksi('cek_member', { p_kode: f.kode.value.trim(), p_hp: f.hp.value.trim() });
-        if (!r?.ok) return toast('Kode member dan nomor WA tidak cocok — tetap harga biasa', 'err');
-        await aksi('pasang_member_servis', { p_servis: id, p_kode: f.kode.value.trim(), p_hp: f.hp.value.trim() });
+        const r = await aksi('cek_member', { p_kode: '', p_hp: f.hp.value.trim() });
+        if (!r?.ok) return toast('Nomor WA ini bukan member — tetap harga biasa', 'err');
+        await aksi('pasang_member_servis', { p_servis: id, p_kode: r.kode, p_hp: f.hp.value.trim() });
         toast('Harga member dipakai untuk ' + r.nama); m.tutup(); segar();
       } catch (er) { salah(er); }
     }); };

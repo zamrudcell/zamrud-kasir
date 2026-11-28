@@ -1,6 +1,6 @@
 // Service worker: simpan tampilan agar cepat dibuka. Data selalu diambil online.
-const VERSI = 'zk-v15';
-const FILE = ['./', 'index.html', 'css/app.css?v=15', 'js/app.js?v=15', 'assets/gem.png?v=2', 'assets/logo.jpg', 'assets/ikon-192.png'];
+const VERSI = 'zk-v16';
+const FILE = ['./', 'index.html', 'css/app.css?v=16', 'js/app.js?v=16', 'assets/gem.png?v=2', 'assets/logo.jpg', 'assets/ikon-192.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSI).then(c => c.addAll(FILE)).catch(() => {})); self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== VERSI).map(x => caches.delete(x))))); self.clients.claim(); });
 self.addEventListener('fetch', e => {

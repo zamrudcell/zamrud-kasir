@@ -119,8 +119,8 @@ export default {
           ${h.gratis.map(g => `<div class="item-gratis">${ikon('gift', 16)} ${esc(g.nama)} — bonus otomatis</div>`).join('')}
         </div>
         <div class="keranjang-total">
-          ${member ? `<div class="baris-member">${ikon('star', 16)}<span><b>${esc(member.nama)}</b> · ${esc(member.kode)}<small>${h.hemat ? `Harga member, hemat ${rp(h.hemat)}` : 'Member terverifikasi'}</small></span><button class="btn-teks merah" data-lepas-member>Lepas</button></div>`
-            : (keranjang.length ? `<button class="btn abu penuh" data-member>${ikon('star', 16)} Member? Cek kode & no WA</button>` : '')}
+          ${member ? `<div class="baris-member">${ikon('star', 16)}<span><b>${esc(member.nama)}</b><small>${esc(member.hp)} · ${h.hemat ? `Harga member, hemat ${rp(h.hemat)}` : 'Member terverifikasi'}</small></span><button class="btn-teks merah" data-lepas-member>Lepas</button></div>`
+            : (keranjang.length ? `<button class="btn abu penuh" data-member>${ikon('star', 16)} Member? Cek no WA</button>` : '')}
           <div class="baris"><span>Subtotal</span><span>${rp(h.sub)}</span></div>
           ${h.dsk ? `<div class="baris hijau"><span>Promo</span><span>-${rp(h.dsk)}</span></div>` : ''}
           <div class="baris total"><span>Total</span><b>${rp(h.total)}</b></div>
@@ -149,15 +149,14 @@ export default {
     // verifikasi member: kode member + nomor WA harus cocok di server
     function cekMember() {
       const l = lembar({ judul: 'Cek member', lebar: 420, isi: `<form id="fm">
-        <p class="redup kecil">Harga member hanya berlaku bila <b>kode member</b> dan <b>nomor WA</b> sama dengan data di toko. Setiap pengecekan tercatat.</p>
-        <label class="lbl">Kode member<input class="input mono" name="kode" placeholder="ZM-0001" autocapitalize="characters" required></label>
+        <p class="redup kecil">Harga member hanya berlaku bila <b>nomor WA</b> terdaftar sebagai member di toko. Setiap pengecekan tercatat.</p>
         <label class="lbl">Nomor WA member<input class="input" name="hp" inputmode="tel" placeholder="08…" required></label>
         <button class="btn utama besar penuh" type="submit">${ikon('check', 18)} Cek</button></form>` });
-      const f = $('#fm', l.el); setTimeout(() => f.kode.focus(), 300);
+      const f = $('#fm', l.el); setTimeout(() => f.hp.focus(), 300);
       f.onsubmit = (e) => { e.preventDefault(); sibuk($('[type=submit]', f), async () => {
         try {
-          const r = await aksi('cek_member', { p_kode: f.kode.value.trim(), p_hp: f.hp.value.trim() });
-          if (!r?.ok) return toast('Kode member dan nomor WA tidak cocok — tetap harga biasa', 'err');
+          const r = await aksi('cek_member', { p_kode: '', p_hp: f.hp.value.trim() });
+          if (!r?.ok) return toast('Nomor WA ini bukan member — tetap harga biasa', 'err');
           member = { kode: r.kode, hp: f.hp.value.trim(), nama: r.nama };
           toast('Member ' + r.nama + ' — harga member dipakai'); l.tutup(); gambarKeranjang();
         } catch (er) { salah(er); }
@@ -230,7 +229,7 @@ export default {
       const l = lembar({ judul: 'Transaksi berhasil', lebar: 420, isi: `
         <div class="sukses"><div class="centang-anim">${ikon('check', 44)}</div>
           <h3>${esc(t.nomor)}</h3><p>Total <b>${rp(t.total)}</b>${t.kembali > 0 ? ` · Kembali <b>${rp(t.kembali)}</b>` : ''}</p>
-          ${t.member_id && pel?.kode_member ? `<p class="emas">${ikon('star', 14)} Harga member · ${esc(pel.nama)} (${esc(pel.kode_member)})</p>` : ''}</div>
+          ${t.member_id && pel?.kode_member ? `<p class="emas">${ikon('star', 14)} Harga member · ${esc(pel.nama)}</p>` : ''}</div>
         <div class="baris-tombol"><button class="btn abu" data-x>Transaksi baru</button><button class="btn utama" data-cetak>${ikon('print', 18)} Cetak nota</button></div>` });
       $('[data-x]', l.el).onclick = () => l.tutup();
       $('[data-cetak]', l.el).onclick = () => cetak(notaTransaksi(t, items, { kasir: sesi.staf.nama, pelanggan: pel }), 'Nota ' + t.nomor);
