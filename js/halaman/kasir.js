@@ -7,6 +7,9 @@ import { mulaiPindai } from '../barcode.js';
 
 let keranjang = []; // {produk, qty}
 let promo = [];
+let member = null; // {kode, hp, nama} — hanya setelah kode member + no WA dicek cocok di server
+// harga member hanya untuk member terverifikasi (perhitungan final tetap di server)
+const hargaOf = (pr) => member && Number(pr.harga_member) > 0 && Number(pr.harga_member) < Number(pr.harga_jual) ? Number(pr.harga_member) : Number(pr.harga_jual);
 
 function promoBerlaku(p) {
   const h = hariIni();
@@ -15,17 +18,18 @@ function promoBerlaku(p) {
 
 // pratinjau promo (perhitungan final tetap di server)
 function hitung() {
-  let sub = 0, dsk = 0; const gratis = [];
+  let sub = 0, dsk = 0, hemat = 0; const gratis = [];
   for (const k of keranjang) {
     const pr = k.produk, q = k.qty;
-    sub += pr.harga_jual * q;
+    const hj = hargaOf(pr); hemat += (Number(pr.harga_jual) - hj) * q;
+    sub += hj * q;
     let terbaik = 0;
     for (const p of promo) {
       if (!['diskon_persen', 'diskon_nominal'].includes(p.jenis)) continue;
       const cocok = (p.syarat === 'produk' && p.syarat_produk_id === pr.id) || (p.syarat === 'kategori' && p.syarat_kategori_id === pr.kategori_id);
       if (!cocok || q < p.min_qty) continue;
-      const per = p.jenis === 'diskon_persen' ? pr.harga_jual * p.nilai / 100 : Number(p.nilai);
-      terbaik = Math.max(terbaik, Math.min(pr.harga_jual, Math.round(per)));
+      const per = p.jenis === 'diskon_persen' ? hj * p.nilai / 100 : Number(p.nilai);
+      terbaik = Math.max(terbaik, Math.min(hj, Math.round(per)));
     }
     k.diskon = terbaik * q; dsk += k.diskon;
   }
@@ -37,7 +41,7 @@ function hitung() {
     if (p.syarat === 'min_belanja') ok = sub - dsk >= Number(p.min_belanja);
     if (ok) gratis.push(p);
   }
-  return { sub, dsk, total: Math.max(0, sub - dsk), gratis };
+  return { sub, dsk, hemat, total: Math.max(0, sub - dsk), gratis };
 }
 
 export default {
@@ -70,7 +74,7 @@ export default {
         <button class="kartu-produk muncul" style="--i:${Math.min(i, 12)}" data-id="${p.id}" ${p.stok <= 0 ? 'disabled' : ''}>
           <span class="kp-kode">${esc(p.kode)}</span>
           <b class="kp-nama">${esc(p.nama)}</b>
-          <span class="kp-harga">${rp(p.harga_jual)}</span>
+          <span class="kp-harga">${rp(p.harga_jual)}</span>${Number(p.harga_member) > 0 ? `<small class="kp-member">Member ${rp(p.harga_member)}</small>` : ''}
           <span class="kp-stok ${p.stok <= 0 ? 'merah' : p.stok <= (p.stok_minimum ?? sesi.pengaturan?.stok_minimum_default ?? 3) ? 'kuning' : ''}">${p.stok <= 0 ? 'Habis' : 'Stok ' + p.stok}</span>
           ${promo.some(x => x.syarat_produk_id === p.id || (x.syarat === 'kategori' && x.syarat_kategori_id === p.kategori_id)) ? `<span class="kp-promo">${ikon('gift', 12)} Promo</span>` : ''}
         </button>`).join('') : kosong(produk.length ? 'Produk tidak ditemukan' : 'Belum ada produk. Owner bisa menambah di menu Produk.');
@@ -108,13 +112,15 @@ export default {
       return `<div class="keranjang-kepala"><h3>${ikon('kasir', 18)} Keranjang</h3>${keranjang.length ? '<button class="btn-teks merah" data-kosongkan>Kosongkan</button>' : ''}</div>
         <div class="keranjang-isi">${keranjang.length ? keranjang.map((k, i) => `
           <div class="item-keranjang">
-            <div class="ik-info"><b>${esc(k.produk.nama)}</b><small>${rp(k.produk.harga_jual)}${k.diskon ? ` · <span class="hijau">hemat ${rp(k.diskon)}</span>` : ''}</small></div>
+            <div class="ik-info"><b>${esc(k.produk.nama)}</b><small>${hargaOf(k.produk) < k.produk.harga_jual ? `<s class="redup">${rp(k.produk.harga_jual)}</s> <span class="emas">${rp(hargaOf(k.produk))} member</span>` : rp(k.produk.harga_jual)}${k.diskon ? ` · <span class="hijau">hemat ${rp(k.diskon)}</span>` : ''}</small></div>
             <div class="stepper"><button data-kurang="${i}">${ikon('minus', 16)}</button><span>${k.qty}</span><button data-tambah="${i}">${ikon('plus', 16)}</button></div>
-            <b class="ik-sub">${rp(k.produk.harga_jual * k.qty - (k.diskon || 0))}</b>
+            <b class="ik-sub">${rp(hargaOf(k.produk) * k.qty - (k.diskon || 0))}</b>
           </div>`).join('') : kosong('Belum ada barang', 'kasir')}
           ${h.gratis.map(g => `<div class="item-gratis">${ikon('gift', 16)} ${esc(g.nama)} — bonus otomatis</div>`).join('')}
         </div>
         <div class="keranjang-total">
+          ${member ? `<div class="baris-member">${ikon('star', 16)}<span><b>${esc(member.nama)}</b> · ${esc(member.kode)}<small>${h.hemat ? `Harga member, hemat ${rp(h.hemat)}` : 'Member terverifikasi'}</small></span><button class="btn-teks merah" data-lepas-member>Lepas</button></div>`
+            : (keranjang.length ? `<button class="btn abu penuh" data-member>${ikon('star', 16)} Member? Cek kode & no WA</button>` : '')}
           <div class="baris"><span>Subtotal</span><span>${rp(h.sub)}</span></div>
           ${h.dsk ? `<div class="baris hijau"><span>Promo</span><span>-${rp(h.dsk)}</span></div>` : ''}
           <div class="baris total"><span>Total</span><b>${rp(h.total)}</b></div>
@@ -126,6 +132,8 @@ export default {
       $$('[data-kurang]', wadah).forEach(b => b.onclick = () => { const k = keranjang[b.dataset.kurang]; k.qty--; if (k.qty <= 0) keranjang.splice(b.dataset.kurang, 1); gambarKeranjang(); });
       const ks = $('[data-kosongkan]', wadah); if (ks) ks.onclick = () => { keranjang = []; gambarKeranjang(); };
       const by = $('[data-bayar]', wadah); if (by) by.onclick = () => bukaBayar();
+      const bm = $('[data-member]', wadah); if (bm) bm.onclick = () => cekMember();
+      const lm = $('[data-lepas-member]', wadah); if (lm) lm.onclick = () => { member = null; gambarKeranjang(); };
     };
     let lembarKeranjang = null;
     function gambarKeranjang() {
@@ -137,6 +145,24 @@ export default {
       bar.classList.remove('denyut'); void bar.offsetWidth; bar.classList.add('denyut');
     }
     bar.onclick = () => { lembarKeranjang = lembar({ judul: 'Keranjang', isi: isiKeranjang() }); pasangAksi(lembarKeranjang.el); };
+
+    // verifikasi member: kode member + nomor WA harus cocok di server
+    function cekMember() {
+      const l = lembar({ judul: 'Cek member', lebar: 420, isi: `<form id="fm">
+        <p class="redup kecil">Harga member hanya berlaku bila <b>kode member</b> dan <b>nomor WA</b> sama dengan data di toko. Setiap pengecekan tercatat.</p>
+        <label class="lbl">Kode member<input class="input mono" name="kode" placeholder="ZM-0001" autocapitalize="characters" required></label>
+        <label class="lbl">Nomor WA member<input class="input" name="hp" inputmode="tel" placeholder="08…" required></label>
+        <button class="btn utama besar penuh" type="submit">${ikon('check', 18)} Cek</button></form>` });
+      const f = $('#fm', l.el); setTimeout(() => f.kode.focus(), 300);
+      f.onsubmit = (e) => { e.preventDefault(); sibuk($('[type=submit]', f), async () => {
+        try {
+          const r = await aksi('cek_member', { p_kode: f.kode.value.trim(), p_hp: f.hp.value.trim() });
+          if (!r?.ok) return toast('Kode member dan nomor WA tidak cocok — tetap harga biasa', 'err');
+          member = { kode: r.kode, hp: f.hp.value.trim(), nama: r.nama };
+          toast('Member ' + r.nama + ' — harga member dipakai'); l.tutup(); gambarKeranjang();
+        } catch (er) { salah(er); }
+      }); };
+    }
 
     function bukaBayar() {
       lembarKeranjang?.tutup();
@@ -184,9 +210,11 @@ export default {
             p_pelanggan_hp: $('#p-hp', l.el).value.trim() || null,
             p_diskon: dk ? angkaDari(dk.value) : 0,
             p_catatan: '',
+            p_member_kode: member?.kode || null,
+            p_member_hp: member?.hp || null,
           });
           l.tutup();
-          keranjang = []; hapusCache('produk');
+          keranjang = []; member = null; hapusCache('produk');
           await selesai(hasil.id);
           // muat ulang daftar produk (stok terbaru)
           const baru = await dataProduk(); produk.splice(0, produk.length, ...baru);
@@ -201,7 +229,8 @@ export default {
       const pel = t.pelanggan_id ? await api.satu('pelanggan', { eq: { id: t.pelanggan_id } }) : null;
       const l = lembar({ judul: 'Transaksi berhasil', lebar: 420, isi: `
         <div class="sukses"><div class="centang-anim">${ikon('check', 44)}</div>
-          <h3>${esc(t.nomor)}</h3><p>Total <b>${rp(t.total)}</b>${t.kembali > 0 ? ` · Kembali <b>${rp(t.kembali)}</b>` : ''}</p></div>
+          <h3>${esc(t.nomor)}</h3><p>Total <b>${rp(t.total)}</b>${t.kembali > 0 ? ` · Kembali <b>${rp(t.kembali)}</b>` : ''}</p>
+          ${t.member_id && pel?.kode_member ? `<p class="emas">${ikon('star', 14)} Harga member · ${esc(pel.nama)} (${esc(pel.kode_member)})</p>` : ''}</div>
         <div class="baris-tombol"><button class="btn abu" data-x>Transaksi baru</button><button class="btn utama" data-cetak>${ikon('print', 18)} Cetak nota</button></div>` });
       $('[data-x]', l.el).onclick = () => l.tutup();
       $('[data-cetak]', l.el).onclick = () => cetak(notaTransaksi(t, items, { kasir: sesi.staf.nama, pelanggan: pel }), 'Nota ' + t.nomor);

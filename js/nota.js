@@ -37,6 +37,7 @@ export function notaTransaksi(t, items, { kasir = '', pelanggan = null } = {}) {
       <tr><td>Tanggal</td><td>: ${tgl(t.dibuat)}</td></tr>
       <tr><td>Kasir</td><td>: ${esc(kasir)}</td></tr>
       ${pelanggan ? `<tr><td>Pelanggan</td><td>: ${esc(pelanggan.nama)}${pelanggan.hp ? ' (' + esc(pelanggan.hp) + ')' : ''}</td></tr>` : ''}
+      ${t.member_id && pelanggan?.kode_member ? `<tr><td>Member</td><td>: ${esc(pelanggan.kode_member)} (harga member)</td></tr>` : ''}
     </table>
     ${t.status === 'batal' ? '<div class="n-batal">TRANSAKSI DIBATALKAN</div>' : ''}
     <div class="n-garis"></div>

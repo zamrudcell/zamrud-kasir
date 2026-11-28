@@ -31,8 +31,8 @@ let tokenStaf = null;
 export const setTokenStaf = (t) => { tokenStaf = t || null; };
 // kolom yang boleh dibaca semua karyawan (modal / harga beli hanya lewat fungsi khusus owner)
 const KOLOM = {
-  produk: 'id,kode,barcode,nama,kategori_id,harga_jual,stok,stok_minimum,satuan,garansi_hari,aktif,dibuat,diubah',
-  transaksi: 'id,nomor,staf_id,pelanggan_id,subtotal,diskon,total,bayar,kembali,metode,catatan,status,batal_oleh,batal_alasan,batal_waktu,dibuat',
+  produk: 'id,kode,barcode,nama,kategori_id,harga_jual,harga_member,stok,stok_minimum,satuan,garansi_hari,aktif,dibuat,diubah',
+  transaksi: 'id,nomor,staf_id,pelanggan_id,member_id,subtotal,diskon,total,bayar,kembali,metode,catatan,status,batal_oleh,batal_alasan,batal_waktu,dibuat',
   transaksi_item: 'id,transaksi_id,produk_id,nama,qty,harga,diskon,subtotal,gratis,promo_id,garansi_hari,qty_retur',
   servis_sparepart: 'id,servis_id,produk_id,nama,qty,harga,gratis,promo_id,staf_id,dibuat',
   opname_item: 'opname_id,produk_id,stok_sistem,stok_fisik,diisi_oleh,diisi_waktu',

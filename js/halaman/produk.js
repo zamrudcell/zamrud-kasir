@@ -27,6 +27,7 @@ function formProduk(p, kategori, saatSimpan) {
       <label class="lbl">Satuan<input class="input" name="satuan" value="${esc(p.satuan || 'pcs')}"></label>
       <label class="lbl">Harga beli (modal)<input class="input" name="harga_beli" inputmode="numeric" required value="${p.harga_beli ?? ''}"></label>
       <label class="lbl">Harga jual<input class="input" name="harga_jual" inputmode="numeric" required value="${p.harga_jual ?? ''}"></label>
+      ${sesi.owner ? `<label class="lbl">Harga member <small class="redup">(kosong = sama dengan harga jual)</small><input class="input" name="harga_member" inputmode="numeric" placeholder="khusus member terdaftar" value="${p.harga_member ?? ''}"></label>` : ''}
       ${baru ? '<label class="lbl">Stok awal<input class="input" name="stok" inputmode="numeric" value="0"></label>' : ''}
       ${baru && !sesi.owner ? '<p class="redup kecil s2">Setelah disimpan, harga hanya bisa diubah owner. Penambahan produk tercatat di log aktivitas.</p>' : ''}
       <label class="lbl">Stok minimum<input class="input" name="stok_minimum" inputmode="numeric" placeholder="default ${sesi.pengaturan?.stok_minimum_default ?? 3}" value="${p.stok_minimum ?? ''}"></label>
@@ -46,7 +47,10 @@ function formProduk(p, kategori, saatSimpan) {
         const d = Object.fromEntries(new FormData(f));
         d.aktif = f.aktif.checked; if (!baru) d.id = p.id;
         for (const k of ['harga_beli', 'harga_jual', 'stok']) if (d[k] !== undefined) d[k] = Number(String(d[k]).replace(/\D/g, '')) || 0;
-        await aksi('simpan_produk', { p_data: d });
+        const hm = d.harga_member; delete d.harga_member;
+        const pid = await aksi('simpan_produk', { p_data: d });
+        if (sesi.owner && hm !== undefined && String(Number(String(hm).replace(/\D/g, '')) || '') !== String(p.harga_member ?? ''))
+          await aksi('simpan_harga_member', { p_produk: pid || p.id, p_harga: Number(String(hm).replace(/\D/g, '')) || 0 });
         hapusCache('produk'); hapusCache('produkS');
         toast('Produk disimpan'); l.tutup(); saatSimpan();
       } catch (er) { salah(er); }
@@ -67,6 +71,7 @@ async function detailProduk(p, kategori, saatBerubah) {
         <div><small>Kode</small><b>${esc(p.kode)}</b></div>
         <div><small>Kategori</small><b>${esc(kat?.nama || '-')}</b></div>
         <div><small>Harga jual</small><b>${rp(p.harga_jual)}</b></div>
+        ${Number(p.harga_member) > 0 ? `<div><small>Harga member</small><b class="emas">${rp(p.harga_member)}</b></div>` : ''}
         ${sesi.owner ? `<div><small>Harga beli</small><b>${rp(p.harga_beli)}</b></div>` : ''}
         <div><small>Stok</small><b class="${p.stok <= batasMin(p) ? 'merah' : ''}">${angka(p.stok)} ${esc(p.satuan)}</b></div>
         <div><small>Garansi</small><b>${p.garansi_hari ?? sesi.pengaturan?.garansi_jual_hari ?? 7} hari</b></div>
@@ -138,7 +143,7 @@ export default {
         <td><b>${esc(p.nama)}</b><small class="blok">${esc(p.kode)} · ${esc(p.barcode || '-')}</small></td>
         <td><span class="pil abu">${esc(kmap[p.kategori_id] || '—')}</span></td>
         ${sesi.owner ? `<td class="kanan">${rp(p.harga_beli)}</td>` : ''}
-        <td class="kanan"><b>${rp(p.harga_jual)}</b></td>
+        <td class="kanan"><b>${rp(p.harga_jual)}</b>${Number(p.harga_member) > 0 ? `<br><small class="emas">member ${rp(p.harga_member)}</small>` : ''}</td>
         <td class="kanan"><span class="pil ${p.stok <= 0 ? 'merah' : p.stok <= batasMin(p) ? 'kuning' : 'hijau'}">${angka(p.stok)}</span></td></tr>`).join('')
         : `<tr><td colspan="5">${kosong(produk.length ? 'Tidak ada yang cocok' : 'Belum ada produk')}</td></tr>`;
       $$('#tabel tbody tr[data-id]', el).forEach(r => r.onclick = () => detailProduk(produk.find(p => p.id === r.dataset.id), kategori, muat));
