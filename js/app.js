@@ -189,12 +189,11 @@ function layarPin(pesan = '') {
   setTimeout(() => $('.kode-staf', p).focus(), 300);
 }
 
-function kunciLayar() {
-  if (!sesi.staf || document.querySelector('.layar-kunci')) return;
+function kunciLayar(s = sesi.staf, judul = 'Layar Terkunci') {
+  if (!s || document.querySelector('.layar-kunci')) return;
   setTerkunci(true);
-  const s = sesi.staf;
   const p = papanPin({
-    judul: 'Layar Terkunci', sub: `${s.nama} (${s.kode}) — masukkan PIN untuk melanjutkan`, kodeTetap: s.kode,
+    judul, sub: `${s.nama} (${s.kode}) — masukkan PIN untuk melanjutkan`, kodeTetap: s.kode,
     tombolBawah: `<button class="btn-teks ganti">${ikon('users', 16)} Ganti karyawan</button>`,
     saatKirim: async (kode, pin) => {
       await sesi.masuk(kode, pin);
@@ -203,7 +202,7 @@ function kunciLayar() {
   });
   p.classList.add('layar-kunci');
   document.body.appendChild(p);
-  $('.ganti', p).onclick = async () => { p.remove(); await sesi.keluar(); layarPin('Silakan masuk dengan kode & PIN Anda'); };
+  $('.ganti', p).onclick = async () => { p.remove(); setTerkunci(false); document.querySelectorAll('.lapis').forEach(l => l.remove()); document.body.classList.remove('ada-lembar'); await sesi.keluar().catch(() => {}); layarPin('Silakan masuk dengan kode & PIN Anda'); };
   setTimeout(() => p.focus(), 100);
 }
 
@@ -264,7 +263,7 @@ function kerangka() {
         : `<a href="#/${id}" class="tab" data-id="${id}"><span class="tab-pil">${ikon(HALAMAN[id].ik, 20)}<small>${esc(HALAMAN[id].pendek || HALAMAN[id].judul)}</small></span></a>`).join('')}
     </nav>
   </div>`;
-  $$('[data-kunci]').forEach(b => b.onclick = kunciLayar);
+  $$('[data-kunci]').forEach(b => b.onclick = () => kunciLayar());
   $$('[data-pin]').forEach(b => b.onclick = gantiPinSaya);
   $('[data-keluar]').onclick = async () => {
     if (!await konfirmasi('Akhiri shift Anda sekarang?', { ya: 'Akhiri shift' })) return;
@@ -307,7 +306,7 @@ function bukaMenuDorong() {
     saatTutup: () => { if (kini !== 'menu') tabMenu?.classList.remove('aktif'); },
   });
   const m = $('.zk-menu-dorong');
-  $('[data-zd="kunci"]', m).onclick = () => setTimeout(kunciLayar, 300);
+  $('[data-zd="kunci"]', m).onclick = () => setTimeout(() => kunciLayar(), 300);
   $('[data-zd="pin"]', m).onclick = () => setTimeout(gantiPinSaya, 300);
   $('[data-zd="keluar"]', m).onclick = () => setTimeout(() => $('[data-keluar]')?.click(), 300);
 }
@@ -413,8 +412,13 @@ async function mulai(dariAwal = false) {
 // pastikan aplikasi hanya dijalankan SEKALI
 if (!window.__zkJalan) {
   window.__zkJalan = true;
-  aturSaatSesiHabis((pesan) => layarPin(pesan));
-  aturSaatTerkunci(kunciLayar);
+  aturSaatSesiHabis((pesan, lama, kode) => {
+    // sesi habis di tengah kerja: kunci di atas layar (formulir yang terbuka tetap utuh), cukup PIN
+    if (kode === 'SESI_HABIS' && lama && document.querySelector('.app')) return kunciLayar(lama, 'Sesi berakhir — masukkan PIN untuk melanjutkan');
+    document.querySelectorAll('.lapis').forEach(l => l.remove()); document.body.classList.remove('ada-lembar');
+    layarPin(pesan);
+  });
+  aturSaatTerkunci(() => kunciLayar());
   mulaiPemantauKunci();
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('sw.js').catch(() => {});

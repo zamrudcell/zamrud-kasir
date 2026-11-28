@@ -262,7 +262,8 @@ a.stat:active { transform: scale(.97); }
 .aksi .ik { padding: 9px; width: 46px; height: 46px; border-radius: 14px; background: var(--zamrud-muda); }
 
 /* ============ kasir ============ */
-.kasir { display: grid; gap: 14px; }
+.kasir { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+.kasir-kiri { min-width: 0; }
 .cari-baris { display: flex; gap: 10px; margin-bottom: 10px; }
 .cari-baris .kolom-cari { min-width: 0; }
 .grid-produk { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }

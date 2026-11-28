@@ -34,17 +34,22 @@ export const sesi = {
 
 // panggil RPC yang butuh token sesi; bila sesi habis -> minta PIN lagi
 export let saatSesiHabis = () => {};
+// karyawan terakhir yang masuk (untuk minta PIN saja bila sesi habis di tengah kerja; isi formulir tidak hilang)
+let terakhirStaf = null;
+class ApiErrorSesi extends Error { constructor() { super('Sesi habis — masukkan PIN, lalu tekan Simpan lagi'); this.kode = 'SESI_HABIS'; } }
 export function aturSaatSesiHabis(f) { saatSesiHabis = f; }
 
 export async function aksi(nama, args = {}) {
-  if (!staf) { saatSesiHabis('Silakan masuk dengan kode & PIN'); throw new Error('Belum masuk'); }
+  if (!staf) { saatSesiHabis('Silakan masuk dengan kode & PIN', terakhirStaf, 'SESI_HABIS'); throw new ApiErrorSesi(); }
   tandaiAktif();
   try {
     return await api.rpc(nama, { p_token: staf.token, ...args });
   } catch (e) {
     if (['SESI_HABIS', 'DILUAR_SHIFT', 'STAF_NONAKTIF'].includes(e.kode)) {
+      if (staf) terakhirStaf = { kode: staf.kode, nama: staf.nama };
       sesi.set(null);
-      saatSesiHabis(e.message);
+      saatSesiHabis(e.message, terakhirStaf, e.kode);
+      e.message = 'Sesi habis — masukkan PIN, lalu tekan Simpan lagi';
     }
     throw e;
   }
