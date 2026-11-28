@@ -1057,7 +1057,7 @@ body.tema-cerah .g-arus { stroke: var(--w); filter: brightness(1.5); }
 /* =====================================================================
    v1.8 — member & harga member
    ===================================================================== */
-.pil.emas { background: linear-gradient(180deg, #f6d27a, #c9a24a); color: #1d1607; }
+body .pil.emas { background: linear-gradient(180deg, #f6d27a, #c9a24a) !important; color: #1d1607 !important; border-color: transparent !important; }
 .kp-member { display: block; font-size: .72rem; font-weight: 700; color: var(--emas); }
 .baris-member { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 8px; border-radius: 14px;
   background: linear-gradient(135deg, rgba(246, 210, 122, .18), rgba(201, 162, 74, .08)); border: 1px solid rgba(246, 210, 122, .45); color: var(--emas); }

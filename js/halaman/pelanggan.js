@@ -4,6 +4,26 @@ import { sesi, aksi } from '../sesi.js';
 import { cetak } from '../nota.js';
 import { barcodeSVG } from '../barcode.js';
 
+// owner menambah pelanggan member langsung (kode member dibuat otomatis)
+function formMember(saatSimpan) {
+  const l = lembar({ judul: 'Tambah member baru', lebar: 460, isi: `<form id="fmb" class="grid-form">
+    <label class="lbl s2">Nama member<input class="input" name="nama" required placeholder="Nama lengkap"></label>
+    <label class="lbl s2">Nomor WA<input class="input" name="hp" inputmode="tel" required placeholder="08…"></label>
+    <label class="lbl s2">Alamat <small class="redup">(opsional)</small><input class="input" name="alamat"></label>
+    <label class="lbl s2">Catatan <small class="redup">(opsional)</small><input class="input" name="catatan" placeholder="misal: langganan servis sejak 2024"></label>
+    <p class="redup kecil s2">Nomor WA ini yang harus cocok dengan kode member saat belanja / servis. Bila nomor sudah pernah tercatat, data pelanggan lamanya yang dijadikan member.</p>
+    <button class="btn utama besar s2" type="submit">${ikon('star', 18)} Simpan & buat kode member</button></form>` });
+  const f = $('#fmb', l.el); setTimeout(() => f.nama.focus(), 300);
+  f.onsubmit = (e) => { e.preventDefault(); sibuk($('[type=submit]', f), async () => {
+    try {
+      const r = await aksi('tambah_member', { p_nama: f.nama.value.trim(), p_hp: f.hp.value.trim(), p_alamat: f.alamat.value.trim(), p_catatan: f.catatan.value.trim() });
+      toast(`${r.nama} jadi member ${r.kode}`); l.tutup();
+      const p = await api.satu('pelanggan', { eq: { id: r.id } });
+      saatSimpan(p || { id: r.id, nama: r.nama, hp: r.hp, kode_member: r.kode, member_aktif: true, dibuat: new Date().toISOString() });
+    } catch (er) { salah(er); }
+  }); };
+}
+
 // kartu member untuk dicetak / difoto
 function cetakKartu(p) {
   cetak(`<section class="kartu-member-cetak"><div class="km-atas"><img src="assets/gem.png" alt=""><div><b>ZAMRUD CELL</b><small>KARTU MEMBER</small></div></div>
@@ -57,6 +77,7 @@ export default {
         <div class="kolom-cari lebar">${ikon('search', 18)}<input class="input" id="q" placeholder="Cari nama / no HP pelanggan…"></div>
         <div class="kolom-cari">${ikon('phone', 18)}<input class="input mono" id="imei" placeholder="Cek riwayat IMEI…" inputmode="numeric"></div>
         <label class="cek"><input type="checkbox" id="hanya-member"> Hanya member</label>
+        ${sesi.owner ? `<button class="btn utama" id="baru-member">${ikon('plus', 18)} Member baru</button>` : ''}
       </div>
       <div id="hasil-imei"></div>
       <div class="kartu daftar" id="daftar"></div>`;
@@ -69,6 +90,8 @@ export default {
         <span class="avatar kecil">${esc(p.nama[0] || '?')}</span><span class="bd-utama"><b>${esc(p.nama)}</b><small>${esc(p.hp || '-')}</small></span>${p.member_aktif ? `<span class="pil emas">${ikon('star', 12)} ${esc(p.kode_member)}</span>` : ''}${ikon('chevron', 18)}</button>`).join('') : kosong('Belum ada pelanggan', 'users');
       $$('[data-id]', el).forEach(b => b.onclick = () => detail(d.find(p => p.id === b.dataset.id), () => muat($('#q', el).value.trim())));
     };
+    const bm = $('#baru-member', el);
+    if (bm) bm.onclick = () => formMember((p) => { muat(); detail(p, () => muat()); });
     $('#hanya-member', el).onchange = () => muat($('#q', el).value.trim());
     let t; $('#q', el).oninput = (e) => { clearTimeout(t); t = setTimeout(() => muat(e.target.value.trim()), 300); };
     $('#imei', el).onkeydown = async (e) => {
